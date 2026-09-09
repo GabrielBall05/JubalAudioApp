@@ -109,7 +109,15 @@ class MainViewModel @Inject constructor(
                 _currentMediaEntity.value = id?.let { mediaRepository.getMediaById(it) }
             }
         }
+
+        //Watch for player error messages
+        viewModelScope.launch {
+            controllerManager.errorMessage.collect { message ->
+                sendUiEvent(UiEvent.ShowToast(message))
+            }
+        }
     }
+
 
     //Player actions
     fun togglePlayPause() = controllerManager.togglePlayPause()

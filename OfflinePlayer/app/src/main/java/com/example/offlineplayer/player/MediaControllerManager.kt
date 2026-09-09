@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.session.MediaController
@@ -20,9 +21,11 @@ import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -67,6 +70,9 @@ class MediaControllerManager @Inject constructor(
     private val _currentPlaylistId = MutableStateFlow<Int?>(null)
     val currentPlaylistId = _currentPlaylistId.asStateFlow()
     private var originalPlaylist: List<MediaItem> = emptyList()
+
+    private val _errorMessage = Channel<String>(Channel.BUFFERED)
+    val errorMessage = _errorMessage.receiveAsFlow()
 
 
     init {
@@ -369,6 +375,49 @@ class MediaControllerManager @Inject constructor(
                     override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
                         super.onPositionDiscontinuity(oldPosition, newPosition, reason)
                         saveCurrentStateToDisk() //Save whenever a new item is jumped to
+                    }
+
+                    override fun onPlayerError(error: PlaybackException) {
+                        super.onPlayerError(error)
+                        val player = controller ?: return
+
+                        //If error is related to loading the resource (ex: Stale URI)
+                        if (error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND
+                            || error.errorCode == PlaybackException.ERROR_CODE_IO_NO_PERMISSION
+                            || error.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED
+                        ) {
+                            val currentItem = player.currentMediaItem
+                            val failedItemTitle: String? = player.currentMediaItem?.mediaMetadata?.title?.toString()
+                            val failedMediaId = currentItem?.mediaMetadata?.extras?.getString("ORIGINAL_MEDIA_ID")
+                                ?: currentItem?.mediaId
+
+                            //Send error message (UI event)
+                            CoroutineScope(Dispatchers.Main).launch {
+                                _errorMessage.send(
+                                    if (failedItemTitle != null) {
+                                        "File not found or unavailable for '$failedItemTitle.'"
+                                    } else {
+                                        "File not found or unavailable."
+                                    }
+                                )
+                            }
+
+                            //Remove broken item from originalPlaylist list
+                            originalPlaylist = originalPlaylist.filter { it.mediaId != failedMediaId }
+
+                            //Remove all instances of this broken item from the timeline
+                            for (i in player.mediaItemCount - 1 downTo 0) {
+                                val item = player.getMediaItemAt(i)
+                                val itemId = item.mediaMetadata.extras?.getString("ORIGINAL_MEDIA_ID") ?: item.mediaId
+                                if (itemId == failedMediaId) player.removeMediaItem(i)
+                            }
+
+                            //Play the next item (next item automatically becomes the new current after removing the broken item)
+                            if (player.mediaItemCount > 0) {
+                                player.prepare()
+                                player.play()
+                            }
+                        }
                     }
                 })
 

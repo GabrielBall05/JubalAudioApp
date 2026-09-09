@@ -169,7 +169,7 @@ fun QueueScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 text = buildAnnotatedString {
                     if (infinitePlaybackSetting && activePlaylist != null) {
-                        append("${activePlaylist.name} will repeat when this message is reached.")
+                        append("${activePlaylist.name} will repeat when this message is reached. Full playlist will be fetched.")
                     }
                     else if (!infinitePlaybackSetting && activePlaylist != null) {
                         append("Infinite Playback is turned off. ${activePlaylist.name} will not be repeated.")
