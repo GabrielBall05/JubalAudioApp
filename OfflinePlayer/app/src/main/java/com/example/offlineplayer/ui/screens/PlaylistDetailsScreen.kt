@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.PlaylistRemove
 import androidx.compose.material3.Button
@@ -109,7 +110,10 @@ fun PlaylistDetailsScreen(
     onBack: () -> Unit,
     onPlayMediaClick: (MediaEntity) -> Unit,
     onAddToQueueClick: (List<MediaEntity>) -> Unit,
-    onPlayPlaylistClick: (Int, Int?) -> Unit
+    onPlayPlaylistClick: (Int, Int?) -> Unit,
+    onTogglePlayPauseClick: () -> Unit,
+    isActivePlaylistPlaying: Boolean,
+    activePlaylistId: Int?
 ) {
     //Ui Event Observer
     ObserveUiEvents(eventFlow = viewModel.uiEvent)
@@ -303,13 +307,18 @@ fun PlaylistDetailsScreen(
                                         .fillMaxHeight()
                                         .aspectRatio(1f),
                                     onClick = {
-                                        playlist?.let { currentPlaylist ->
-                                            onPlayPlaylistClick(currentPlaylist.playlistId, null)
+                                        if (activePlaylistId == playlist?.playlistId) onTogglePlayPauseClick()
+                                        else {
+                                            playlist?.let { currentPlaylist ->
+                                                onPlayPlaylistClick(currentPlaylist.playlistId, null)
+                                            }
                                         }
                                     }
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.PlayCircle,
+                                        imageVector =
+                                            if (activePlaylistId == playlist?.playlistId && isActivePlaylistPlaying) Icons.Default.PauseCircle
+                                            else Icons.Default.PlayCircle,
                                         contentDescription = "Play Playlist",
                                         modifier = Modifier.fillMaxSize(),
                                         tint = MaterialTheme.colorScheme.primary

@@ -59,6 +59,7 @@ import com.example.offlineplayer.ui.viewmodels.MainViewModel
 import com.example.offlineplayer.util.UiEvent
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
 import com.example.offlineplayer.util.ObserveUiEvents
 
@@ -100,6 +101,9 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel()) {
     //State for ExpandedPlayerScreen Sheet
     var showExpandedPlayerSheet by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val isPlaying by mainViewModel.isPlaying.collectAsStateWithLifecycle()
+    val activePlaylistId by mainViewModel.currentPlaylistId.collectAsStateWithLifecycle()
 
     Scaffold(
         bottomBar = {
@@ -150,7 +154,10 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel()) {
                     onAddToQueueClick = { mainViewModel.addMediaToQueue(it) },
                     onPlayPlaylistClick = { playlistId, startItemId ->
                         mainViewModel.playPlaylist(playlistId, startItemId)
-                    }
+                    },
+                    onTogglePlayPauseClick = { mainViewModel.togglePlayPause() },
+                    isActivePlaylistPlaying = isPlaying,
+                    activePlaylistId = activePlaylistId
                 )
             }
         }
