@@ -59,6 +59,7 @@ import com.example.offlineplayer.ui.components.dialogs.PlaylistFormDialog
 import com.example.offlineplayer.ui.components.dialogs.PlaylistPicker
 import com.example.offlineplayer.ui.components.dialogs.SortOrderDialog
 import com.example.offlineplayer.ui.components.listitems.MediaListItemSelectable
+import com.example.offlineplayer.ui.components.listitems.StaleUriListItem
 import com.example.offlineplayer.ui.components.optionsheets.MediaOption
 import com.example.offlineplayer.ui.components.optionsheets.MediaOptionsSheetContent
 import com.example.offlineplayer.ui.viewmodels.HomeViewModel
@@ -98,13 +99,19 @@ fun HomeScreen(
     var idsToEdit by rememberSaveable { mutableStateOf<List<Int>>(emptyList()) }
     var showSortDialog by rememberSaveable { mutableStateOf(false) }
     var creatingPlaylist by rememberSaveable { mutableStateOf(false) }
+    var mediaIdToRelink by rememberSaveable { mutableStateOf<Int?>(null) }
 
-    //File Picker launcher
-    val filePickerLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenMultipleDocuments()) {
-        uris: List<Uri> ->
-        if (uris.isNotEmpty()) {
-            viewModel.importMedia(uris)
-        }
+    //Bulk File Picker launcher
+    val filePickerLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenMultipleDocuments()) { uris: List<Uri> ->
+        if (uris.isNotEmpty()) viewModel.importMedia(uris)
+    }
+
+    //Single File Picker Launcher
+    val relinkLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        uri?.let { newUri -> mediaIdToRelink?.let { id ->
+            viewModel.relinkMedia(id, newUri)
+        } }
+        mediaIdToRelink = null
     }
 
     //Jump to top of list when list size changes or sort order is changed
@@ -200,13 +207,25 @@ fun HomeScreen(
                         items = mediaList,
                         key = { it.mediaId }
                     ) { media ->
-                        MediaListItemSelectable(
-                            media = media,
-                            isSelected = selectedIds.contains(media.mediaId),
-                            onSelect = { viewModel.toggleSelection(media.mediaId) },
-                            constrainSelectToCheckbox = false,
-                            onMoreClick = { selectedMediaItemForMenu = media }
-                        )
+                        //Show selectable list item under normal circumstances
+                        if (!media.isStaleUri) {
+                            MediaListItemSelectable(
+                                media = media,
+                                isSelected = selectedIds.contains(media.mediaId),
+                                onSelect = { viewModel.toggleSelection(media.mediaId) },
+                                constrainSelectToCheckbox = false,
+                                onMoreClick = { selectedMediaItemForMenu = media }
+                            )
+                        } else { //Show error list item when uri is stale
+                            StaleUriListItem(
+                                media = media,
+                                onRelinkClick = {
+                                    mediaIdToRelink = media.mediaId
+                                    relinkLauncher.launch(arrayOf("audio/*"))
+                                },
+                                onDeleteClick = { idsToDelete = listOf(media.mediaId) }
+                            )
+                        }
                     }
                 }
             }

@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 
@@ -17,7 +18,8 @@ fun RowScope.InfoColumnMarquee(
     mainText: String,
     mainTextStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     subText: String? = null,
-    subTextStyle: TextStyle = MaterialTheme.typography.bodySmall
+    subTextStyle: TextStyle = MaterialTheme.typography.bodySmall,
+    textColor: Color = Color.Unspecified
 ) {
     Column(
         modifier = modifier
@@ -26,18 +28,20 @@ fun RowScope.InfoColumnMarquee(
     ) {
         //Line 1
         Text(
+            modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
             text = mainText,
             style = mainTextStyle,
             maxLines = 1,
-            modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE)
+            color = textColor
         )
         //Line 2
         subText?.let { subText ->
             Text(
+                modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
                 text = subText,
                 style = subTextStyle,
                 maxLines = 1,
-                modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE)
+                color = textColor
             )
         }
     }

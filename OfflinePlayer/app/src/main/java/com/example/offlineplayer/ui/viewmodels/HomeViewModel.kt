@@ -92,8 +92,17 @@ class HomeViewModel @Inject constructor(
 
 
     init {
+        //Get initial sort order to use from settings
         viewModelScope.launch {
             _sortOrder.value = settingsRepository.defaultMediaSortOrderFlow.first()
+        }
+
+        //Validate URI integrity and notify user if applicable
+        viewModelScope.launch {
+            val numStale = mediaRepository.validateMediaUris()
+            if (numStale > 0) sendUiEvent(
+                UiEvent.ShowToast("$numStale media have invalid file paths. Fix in Home page.")
+            )
         }
     }
 
@@ -140,6 +149,15 @@ class HomeViewModel @Inject constructor(
     fun importMedia(uriList: List<Uri>) = launchWithLoading {
         mediaRepository.importMedia(uriList)
         sendUiEvent(UiEvent.ShowToast("Added ${uriList.size} item${if (uriList.size > 1) "s" else ""} to library" ))
+    }
+
+    fun relinkMedia(mediaId: Int, newUri: Uri) = launchWithoutLoading {
+        try {
+            mediaRepository.relinkMedia(mediaId, newUri)
+            sendUiEvent(UiEvent.ShowToast("File re-linked successfully."))
+        } catch (e: Exception) {
+            sendUiEvent(UiEvent.ShowToast("Failed to link new file."))
+        }
     }
 
     fun deleteMediaByIds(ids: List<Int>) = launchWithLoading {

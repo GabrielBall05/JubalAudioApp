@@ -42,7 +42,25 @@ interface MediaDao {
     """)
     suspend fun updateArtworkBulk(artworkUri: String?, ids: List<Int>)
 
+    @Query("""
+        UPDATE ${MediaEntity.TABLE_NAME}
+        SET uri = :newUri, isStaleUri = 0 
+        WHERE mediaId = :id
+    """)
+    suspend fun updateMediaUri(id: Int, newUri: String)
+
     //Delete list of media items (by mediaId)
     @Query("DELETE FROM ${MediaEntity.TABLE_NAME} WHERE mediaId IN (:mediaIds)")
     suspend fun deleteMediaList(mediaIds: List<Int>)
+
+
+    @Query("SELECT * FROM ${MediaEntity.TABLE_NAME}")
+    suspend fun getAllMediaOnce(): List<MediaEntity>
+
+    @Query("""
+        UPDATE ${MediaEntity.TABLE_NAME}
+        SET isStaleUri = 1
+        WHERE mediaId in (:ids)
+    """)
+    suspend fun markAsStale(ids: List<Int>)
 }

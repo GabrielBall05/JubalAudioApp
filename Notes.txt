@@ -1,10 +1,12 @@
 TODO:
 
-no longer valid file path (attach new one)
+longer toast messages
+sort by stale (invalid file path) in home page
 better toggleShuffle logic
 definitely move around the add buttons
 remove from queue/upnext
 
+select newly imported media
 reordering in a playlist is a little difficult if youre at the top or bottom of the list
 log statements everywhere (and improve its tag/message)
 horizontal orientation layouts - or just only allow vertical

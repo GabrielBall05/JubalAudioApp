@@ -69,4 +69,39 @@ class MediaRepository @Inject constructor(
         }
         if (entities.isNotEmpty()) mediaDao.insertMediaList(entities) //Perform db insertions
     }
+
+    suspend fun validateMediaUris(): Int = withContext(Dispatchers.IO) {
+        val allMediaList = mediaDao.getAllMediaOnce()
+        val staleIds = allMediaList.filter { !isUriValid(it.uri) }.map { it.mediaId }
+        if (staleIds.isNotEmpty()) mediaDao.markAsStale(staleIds)
+        return@withContext staleIds.size
+    }
+
+    suspend fun relinkMedia(mediaId: Int, newUri: Uri) = withContext(Dispatchers.IO) {
+        try {
+            //Get persistable permission for the new file
+            context.contentResolver.takePersistableUriPermission(
+                newUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+
+            //Update just the URI and stale status in Room
+            mediaDao.updateMediaUri(mediaId, newUri.toString())
+        } catch (e: Exception) {
+            Log.e("OfflineAudioSuite", "MediaRepository: Failed to relink media $mediaId", e)
+            throw e
+        }
+    }
+
+    private fun isUriValid(uriString: String): Boolean {
+        return try {
+            val uri = uriString.toUri()
+            //Attempt to open a typed descriptor to verify integrity
+            context.contentResolver.openAssetFileDescriptor(uri, "r")?.use {
+                true
+            } ?: false
+        } catch (e: Exception) {
+            false
+        }
+    }
 }
