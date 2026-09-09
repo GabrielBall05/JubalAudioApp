@@ -12,6 +12,8 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.example.offlineplayer.data.local.asManualQueueItem
 import com.example.offlineplayer.data.repository.PlaybackPersistenceRepository
+import com.example.offlineplayer.data.repository.PlaylistRepository
+import com.example.offlineplayer.data.repository.SettingsRepository
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,6 +31,8 @@ import javax.inject.Singleton
 @Singleton
 class MediaControllerManager @Inject constructor(
     private val persistenceRepository: PlaybackPersistenceRepository,
+    private val playlistRepository: PlaylistRepository,
+    private val settingsRepository: SettingsRepository,
     @param:ApplicationContext private val context: Context
 ) {
     private var controllerFuture: ListenableFuture<MediaController>? = null
@@ -334,6 +339,29 @@ class MediaControllerManager @Inject constructor(
                         super.onPlaybackStateChanged(playbackState)
                         if (playbackState == Player.STATE_READY) {
                             _duration.value = player.duration.coerceAtLeast(0L)
+                        }
+
+
+                        //If end of timeline has been reached and infinite playback setting is on, repeat original playlist
+                        if (playbackState == Player.STATE_ENDED) {
+                            _currentPlaylistId.value?.let { playlistId ->
+                                //Fetch updated playlist list from Room
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    if (settingsRepository.infinitePlaybackFlow.first()) {
+                                        val freshItems = playlistRepository.fetchPlaylistMediaList(playlistId)
+                                        if (freshItems.isNotEmpty()) {
+                                            withContext(Dispatchers.Main) {
+                                                playPlaylist( //Reuse playPlaylist and use current values
+                                                    mediaItems = freshItems,
+                                                    playlistId = playlistId,
+                                                    startItemIndex = 0,
+                                                    startShuffled = _isShuffling.value
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 

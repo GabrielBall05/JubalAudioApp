@@ -26,6 +26,7 @@ class SettingsRepository @Inject constructor(
         val INITIAL_KEEP_SCREEN_ON = true
         val INITIAL_MEDIA_SORT_ORDER = MediaSortOrder.DATE_ADDED_MOST_RECENT
         val INITIAL_PLAYLISTS_SORT_ORDER = PlaylistsSortOrder.DATE_CREATED_MOST_RECENT
+        val INITIAL_INFINITE_PLAYBACK = true
     }
 
     //Keys
@@ -33,10 +34,11 @@ class SettingsRepository @Inject constructor(
         val KEEP_SCREEN_ON = booleanPreferencesKey("keep_screen_on")
         val DEFAULT_MEDIA_SORT_ORDER = stringPreferencesKey("default_media_sort_order")
         val DEFAULT_PLAYLISTS_SORT_ORDER = stringPreferencesKey("default_playlists_sort_order")
+        val INFINITE_PLAYBACK = booleanPreferencesKey("infinite_playback")
     }
 
 
-    //Keep Screen On Setting (Flow)
+    //Keep Screen On (Flow)
     val keepScreenOnFlow: Flow<Boolean> = dataStore.data
         .catch { exception ->
             if (exception is IOException) emit(emptyPreferences()) else throw exception
@@ -69,6 +71,15 @@ class SettingsRepository @Inject constructor(
             }.getOrDefault(INITIAL_PLAYLISTS_SORT_ORDER)
         }
 
+    //Infinite Playback (Flow)
+    val infinitePlaybackFlow: Flow<Boolean> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences ->
+            preferences[Keys.INFINITE_PLAYBACK] ?: INITIAL_INFINITE_PLAYBACK
+        }
+
 
     //Update Keep Screen On Setting
     suspend fun setKeepScreenOn(keepOn: Boolean) = withContext(Dispatchers.IO) {
@@ -88,6 +99,13 @@ class SettingsRepository @Inject constructor(
     suspend fun setDefaultPlaylistsSortOrder(sortOrder: PlaylistsSortOrder) = withContext(Dispatchers.IO) {
         dataStore.edit { preferences ->
             preferences[Keys.DEFAULT_PLAYLISTS_SORT_ORDER] = sortOrder.name
+        }
+    }
+
+    //Update Infinite Playback Setting
+    suspend fun setInfinitePlayback(enabled: Boolean) = withContext(Dispatchers.IO) {
+        dataStore.edit { preferences ->
+            preferences[Keys.INFINITE_PLAYBACK] = enabled
         }
     }
 }

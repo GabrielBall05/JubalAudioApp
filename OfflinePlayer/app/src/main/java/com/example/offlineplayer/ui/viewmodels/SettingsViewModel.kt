@@ -20,14 +20,14 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUIState> = combine(
         settingsRepository.keepScreenOnFlow,
         settingsRepository.defaultMediaSortOrderFlow,
-        settingsRepository.defaultPlaylistsSortOrderFlow
-        //settingsRepository.defaultShuffleFlow
-    ) { screenOn, mediaSort, playlistsSort ->
+        settingsRepository.defaultPlaylistsSortOrderFlow,
+        settingsRepository.infinitePlaybackFlow
+    ) { screenOn, mediaSort, playlistsSort, infinitePlayback ->
         SettingsUIState(
             keepScreenOn = screenOn,
             defaultMediaSortOrder = mediaSort,
-            defaultPlaylistsSortOrder = playlistsSort
-            //defaultShuffle = shuffle
+            defaultPlaylistsSortOrder = playlistsSort,
+            infinitePlayback = infinitePlayback
         )
     }.stateIn(
         scope = viewModelScope,
@@ -55,16 +55,16 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-//    fun setDefaultShuffle(newSetting: Boolean) {
-//        viewModelScope.launch {
-//            settingsRepository.setDefaultShuffle(newSetting)
-//        }
-//    }
+    fun setInfinitePlayback(newSetting: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setInfinitePlayback(newSetting)
+        }
+    }
 }
 
 data class SettingsUIState(
     val keepScreenOn: Boolean = SettingsRepository.INITIAL_KEEP_SCREEN_ON,
     val defaultMediaSortOrder: MediaSortOrder = SettingsRepository.INITIAL_MEDIA_SORT_ORDER,
     val defaultPlaylistsSortOrder: PlaylistsSortOrder = SettingsRepository.INITIAL_PLAYLISTS_SORT_ORDER,
-    //val defaultShuffle: Boolean = SettingsRepository.INITIAL_SHUFFLE
+    val infinitePlayback: Boolean = SettingsRepository.INITIAL_INFINITE_PLAYBACK
 )

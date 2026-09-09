@@ -1,30 +1,28 @@
 TODO:
 
-when adding/removing/reordering playlists in playlistdetails, also trigger updating original playlist for media controller manager
-	may have to move original playlist somewhere else
-	so when a user makes a change (add to, remove from, reordering) to an actual playlist via  @PlaylistDetailsScreen.kt and  @PlaylistDetailsViewModel.kt , should I trigger an update to the originalPlaylist in  @MediaControllerManager.kt and  @PlaybackPersistenceRepository.kt ? This wouldn't stop or change the up next or the playback, just the source of truth (originalPlaylist). And how should I handle if the user deletes the actual playlist? Should I a) if the deleted playlist is currently playing (by looking at playlistId), then clear the player? or b) just let it be. 
+better toggleShuffle logic
 
-repeat original playlist at end of timeline
-
-play button in playlistdetails: show pause if that playlist is playing. Also save which playlist is currently playing
-remove from playlist functionality on expanded player screen
-swipe image in explanded player screen to go next/prev
-
-definitely move around the add buttons
+start playlist at selected song (ui functionality)
 no longer valid file path (attach new one)
+repeat original playlist at end of timeline (make it a setting and call it infinite playback)
+play button in playlistdetails: show pause if that playlist is playing.
+definitely move around the add buttons
+remove from queue/upnext
+
+reordering in a playlist is a little difficult if youre at the top or bottom of the list
 log statements everywhere (and improve its tag/message)
 horizontal orientation layouts - or just only allow vertical
-app icon
+app icon and name: Jubal Audio Player & Organizer
+swipe image in explanded player screen to go next/prev
 when copying/storing images, maybe try to make sure there are no duplicated or orphaned images to save space on phone
 move the add media button to bottom nav bar. maybe do snackbar instead of toasts because it won't be a problem anymore
 thoroughly comment code and just make it look better
-maybe: wrap mediaitem in wrapper class with uuid to use as lazycolumn key for queue screen
+maybe: drag for reordering
 maybe: widget
 maybe: audio equalization setting
 maybe: gapless playback by finding empty noise and using .setClippingConfiguration in MediaItem builder
 
-Queue:
-1. removing items from queue or up next
-2. save player state (timeline, current item, current duration, all the queues, etc)
-3. swipe image for next/prev in expanded player screen
-4. start playlist at selected song
+future:
+1. Direct folder and file reading
+2. No display details, only actual metadata
+3. Metadata editing

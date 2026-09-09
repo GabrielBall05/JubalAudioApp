@@ -34,7 +34,7 @@ class MainViewModel @Inject constructor(
     private val controllerManager: MediaControllerManager,
     private val mediaRepository: MediaRepository,
     private val playlistRepository: PlaylistRepository,
-    private val settingsRepository: SettingsRepository
+    settingsRepository: SettingsRepository
 ): BaseViewModel() {
     private var playbackJob: Job? = null
 
@@ -81,6 +81,11 @@ class MainViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SettingsRepository.INITIAL_KEEP_SCREEN_ON
     )
+    val infinitePlayback: StateFlow<Boolean> = settingsRepository.infinitePlaybackFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = SettingsRepository.INITIAL_KEEP_SCREEN_ON
+    )
 
     init {
         //Ensure the controller is connected when the app starts or reopens
@@ -94,11 +99,13 @@ class MainViewModel @Inject constructor(
             }
         }
 
+        //Get currently playing media entity
         viewModelScope.launch {
             currentMediaItem.collect { mediaItem ->
+                //Extract real media id because if it is a manual queue item, it is in the extras
                 val id = mediaItem?.mediaMetadata?.extras?.getString("ORIGINAL_MEDIA_ID")?.toIntOrNull()
                     ?: mediaItem?.mediaId?.toIntOrNull()
-
+                //Update current media entity flow with actual Room entry
                 _currentMediaEntity.value = id?.let { mediaRepository.getMediaById(it) }
             }
         }
@@ -153,6 +160,7 @@ class MainViewModel @Inject constructor(
     fun manualQueueRemoveItemAtIndex(index: Int) = controllerManager.manualQueueRemoveItemAtIndex(index)
     fun upNextRemoveItemAtIndex(index: Int) = controllerManager.upNextRemoveItemAtIndex(index)
 
+    //Database actions
     fun removeFromPlaylist(mediaId: Int, playlistId: Int) = launchWithoutLoading {
         playlistRepository.removeMediaFromPlaylist(listOf(mediaId), playlistId)
         sendUiEvent(UiEvent.ShowToast("Removed from playlist"))
@@ -175,6 +183,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    //Ticker
     private fun startPlaybackTicker() {
         playbackJob?.cancel() //Clear any existing job
         playbackJob = viewModelScope.launch {

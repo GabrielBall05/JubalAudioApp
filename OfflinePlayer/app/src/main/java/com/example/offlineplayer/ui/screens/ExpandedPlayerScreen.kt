@@ -57,6 +57,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.offlineplayer.ui.components.common.SurfacedImage
@@ -75,7 +76,10 @@ fun ExpandedPlayerScreen(
     viewModel: MainViewModel,
     onCollapse: () -> Unit
 ) {
-    val keepScreenOn by viewModel.keepScreenOn.collectAsStateWithLifecycle() //User's keep screen on setting
+    //Collect settings states from viewmodel
+    val infinitePlayback by viewModel.infinitePlayback.collectAsStateWithLifecycle()
+    val keepScreenOn by viewModel.keepScreenOn.collectAsStateWithLifecycle()
+
     if (keepScreenOn) KeepScreenOn() //Call helper composable to ensure the screen stays on while this screen/composable is active
 
     //Collect states from viewmodel
@@ -145,8 +149,10 @@ fun ExpandedPlayerScreen(
 
                 //Title
                 Text(
+                    modifier = Modifier.weight(1f),
                     text = currentPlaylist?.name ?: "Ad Hoc",
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center
                 )
 
                 //Options Menu
@@ -385,6 +391,7 @@ fun ExpandedPlayerScreen(
                     .fillMaxWidth()
                     .fillMaxHeight(0.75f)) {
                     QueueScreen(
+                        infinitePlaybackSetting = infinitePlayback,
                         currentlyPlaying = currentMediaItem,
                         manualQueue = manualQueue,
                         upNext = upNext,

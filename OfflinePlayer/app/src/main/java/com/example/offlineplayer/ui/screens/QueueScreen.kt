@@ -3,9 +3,12 @@ package com.example.offlineplayer.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -23,7 +26,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import com.example.offlineplayer.ui.components.dialogs.ConfirmationDialog
@@ -32,6 +42,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun QueueScreen(
+    infinitePlaybackSetting: Boolean,
     currentlyPlaying: MediaItem?,
     manualQueue: List<MediaItem>,
     upNext: List<MediaItem>,
@@ -147,6 +158,27 @@ fun QueueScreen(
                     onMoveDown = { onMoveUpNextItem(index, index + 1) }
                 )
             }
+        }
+
+        //Infinite Playback message
+        item {
+            Text(
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 32.dp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = buildAnnotatedString {
+                    if (infinitePlaybackSetting) {
+                        append("Playlist will repeat when this message is reached.")
+                    }
+                    else  {
+                        append("End of timeline. Turn on ")
+                        withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
+                            append("Infinite Playback")
+                        }
+                        append(" in Settings to repeat playlist. If it is already on, then there is no currently playing playlist.")
+                    }
+                },
+                textAlign = TextAlign.Center
+            )
         }
     }
 
