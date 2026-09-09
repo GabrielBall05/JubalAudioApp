@@ -22,3 +22,22 @@ future:
 1. Direct folder and file reading
 2. No display details, only actual metadata
 3. Metadata editing
+
+
+
+
+short description:
+Organize, edit, and play your local audio files via seamless playback queue.
+
+
+full description:
+Designed for users who prefer owning their media rather than renting it through subscription services, this app brings a simple user interface and feature-rich queue management of modern music platforms directly to your personal collection of audio files.
+
+Features:
+ - Instantly bring in any audio file stored on your device, whether they be songs, voice recordings, podcasts, or audiobooks.
+ - Build, reorder, and manage listening sessions with a dynamic playback queue inspired by modern streaming apps. Easily shuffle, add to queue, repeat, reorder, or jump to any track in the timeline.
+ - Curate custom playlists to meet your listening purposes.
+ - Edit in-app display details such as title, creator, and image to control how your media looks.
+ - Powered by Google's industry standard ExoPlayer, enjoy smooth and battery-efficient playback performance across a wide variety of audio formats in either the background or foreground.
+ - Blends into your device's aesthetic by dynamically adapting to the system's color scheme using Material You.
+end full description

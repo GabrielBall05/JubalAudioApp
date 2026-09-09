@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
+import com.example.offlineplayer.data.local.PlaylistEntity
 import com.example.offlineplayer.ui.components.dialogs.ConfirmationDialog
 import com.example.offlineplayer.ui.components.listitems.QueueItem
 import kotlinx.coroutines.launch
@@ -43,6 +44,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun QueueScreen(
     infinitePlaybackSetting: Boolean,
+    activePlaylist: PlaylistEntity?,
     currentlyPlaying: MediaItem?,
     manualQueue: List<MediaItem>,
     upNext: List<MediaItem>,
@@ -166,15 +168,17 @@ fun QueueScreen(
                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 32.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 text = buildAnnotatedString {
-                    if (infinitePlaybackSetting) {
-                        append("Playlist will repeat when this message is reached.")
+                    if (infinitePlaybackSetting && activePlaylist != null) {
+                        append("${activePlaylist.name} will repeat when this message is reached.")
                     }
-                    else  {
-                        append("End of timeline. Turn on ")
-                        withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-                            append("Infinite Playback")
+                    else if (!infinitePlaybackSetting && activePlaylist != null) {
+                        append("Infinite Playback is turned off. ${activePlaylist.name} will not be repeated.")
+                    }
+                    else {
+                        append("End of timeline.")
+                        if (infinitePlaybackSetting) {
+                            append("No currently active playlist to repeat.")
                         }
-                        append(" in Settings to repeat playlist. If it is already on, then there is no currently playing playlist.")
                     }
                 },
                 textAlign = TextAlign.Center

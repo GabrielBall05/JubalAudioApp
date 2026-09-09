@@ -392,6 +392,7 @@ fun ExpandedPlayerScreen(
                     .fillMaxHeight(0.75f)) {
                     QueueScreen(
                         infinitePlaybackSetting = infinitePlayback,
+                        activePlaylist = currentPlaylist,
                         currentlyPlaying = currentMediaItem,
                         manualQueue = manualQueue,
                         upNext = upNext,
