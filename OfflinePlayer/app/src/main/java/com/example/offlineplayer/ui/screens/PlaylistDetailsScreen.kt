@@ -109,7 +109,7 @@ fun PlaylistDetailsScreen(
     onBack: () -> Unit,
     onPlayMediaClick: (MediaEntity) -> Unit,
     onAddToQueueClick: (List<MediaEntity>) -> Unit,
-    onPlayPlaylistClick: (Int) -> Unit
+    onPlayPlaylistClick: (Int, Int?) -> Unit
 ) {
     //Ui Event Observer
     ObserveUiEvents(eventFlow = viewModel.uiEvent)
@@ -304,7 +304,7 @@ fun PlaylistDetailsScreen(
                                         .aspectRatio(1f),
                                     onClick = {
                                         playlist?.let { currentPlaylist ->
-                                            onPlayPlaylistClick(currentPlaylist.playlistId)
+                                            onPlayPlaylistClick(currentPlaylist.playlistId, null)
                                         }
                                     }
                                 ) {
@@ -385,6 +385,9 @@ fun PlaylistDetailsScreen(
                                 } else {
                                     MediaListItemStandard( //Use standard viewing list item if not selecting
                                         media = media,
+                                        onImageClick = { playlist?.let { playlist ->
+                                            onPlayPlaylistClick(playlist.playlistId, media.mediaId)
+                                        } },
                                         onLongClick = { viewModel.toggleSelection(it.mediaId) },
                                         onMoreClick = { selectedMediaItemForMenu = it }
                                     )
@@ -423,7 +426,7 @@ fun PlaylistDetailsScreen(
                         showPlaylistOptionsSheet = false
                         when (option) {
                             PlaylistOption.EDIT -> editingPlaylist = true
-                            PlaylistOption.PLAY_NOW -> onPlayPlaylistClick(currentPlaylist.playlistId)
+                            PlaylistOption.PLAY_NOW -> onPlayPlaylistClick(currentPlaylist.playlistId, null)
                             PlaylistOption.ADD_TO_QUEUE -> onAddToQueueClick(fullMediaList)
                             PlaylistOption.ADD_MEDIA -> showMediaPicker = true
                             PlaylistOption.REORDER -> isReordering = true

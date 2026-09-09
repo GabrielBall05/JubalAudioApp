@@ -148,7 +148,9 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel()) {
                     onBack = { navController.popBackStack() },
                     onPlayMediaClick = { mainViewModel.playMediaNow(it) },
                     onAddToQueueClick = { mainViewModel.addMediaToQueue(it) },
-                    onPlayPlaylistClick = { mainViewModel.playPlaylist(it) }
+                    onPlayPlaylistClick = { playlistId, startItemId ->
+                        mainViewModel.playPlaylist(playlistId, startItemId)
+                    }
                 )
             }
         }

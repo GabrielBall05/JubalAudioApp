@@ -11,6 +11,7 @@ import androidx.media3.common.Timeline
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.example.offlineplayer.data.local.asManualQueueItem
+import com.example.offlineplayer.data.local.toMediaItem
 import com.example.offlineplayer.data.repository.PlaybackPersistenceRepository
 import com.example.offlineplayer.data.repository.PlaylistRepository
 import com.example.offlineplayer.data.repository.SettingsRepository
@@ -153,7 +154,7 @@ class MediaControllerManager @Inject constructor(
         player.play()
     }
 
-    fun playPlaylist(mediaItems: List<MediaItem>, playlistId: Int?, startItemIndex: Int = -1, startShuffled: Boolean) {
+    fun playPlaylist(mediaItems: List<MediaItem>, playlistId: Int?, startItemIndex: Int, startShuffled: Boolean) {
         if (mediaItems.isEmpty()) return
         val player = controller ?: return
 
@@ -161,7 +162,7 @@ class MediaControllerManager @Inject constructor(
         _currentPlaylistId.value = playlistId
         _isShuffling.value = startShuffled
 
-        val startAtSpecific = startItemIndex != -1
+        val startAtSpecific = startItemIndex >= 0
         val finalTimeline: List<MediaItem>
         val playIndex: Int
 
@@ -348,7 +349,7 @@ class MediaControllerManager @Inject constructor(
                                 //Fetch updated playlist list from Room
                                 CoroutineScope(Dispatchers.IO).launch {
                                     if (settingsRepository.infinitePlaybackFlow.first()) {
-                                        val freshItems = playlistRepository.fetchPlaylistMediaList(playlistId)
+                                        val freshItems = playlistRepository.fetchPlaylistMediaList(playlistId).map { it.toMediaItem() }
                                         if (freshItems.isNotEmpty()) {
                                             withContext(Dispatchers.Main) {
                                                 playPlaylist( //Reuse playPlaylist and use current values

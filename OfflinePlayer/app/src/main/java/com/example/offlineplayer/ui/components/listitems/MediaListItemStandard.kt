@@ -21,6 +21,7 @@ import com.example.offlineplayer.ui.components.common.SurfacedImage
 @Composable
 fun MediaListItemStandard(
     media: MediaEntity,
+    onImageClick: () -> Unit,
     onLongClick: (MediaEntity) -> Unit,
     onMoreClick: (MediaEntity) -> Unit
 ) {
@@ -28,7 +29,7 @@ fun MediaListItemStandard(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
-                onClick = {  }, //Nothing
+                onClick = onImageClick,
                 onLongClick = { onLongClick(media) }
             )
             .padding(start = 12.dp, top = 2.dp, end = 8.dp, bottom = 2.dp),

@@ -2,7 +2,6 @@ TODO:
 
 better toggleShuffle logic
 
-start playlist at selected song (ui functionality)
 no longer valid file path (attach new one)
 repeat original playlist at end of timeline (make it a setting and call it infinite playback)
 play button in playlistdetails: show pause if that playlist is playing.

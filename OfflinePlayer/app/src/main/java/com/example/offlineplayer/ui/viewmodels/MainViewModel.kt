@@ -119,13 +119,15 @@ class MainViewModel @Inject constructor(
     fun toggleShuffle() = controllerManager.toggleShuffle()
     fun toggleRepeatMode() = controllerManager.toggleRepeatMode()
 
-    fun playPlaylist(playlistId: Int) {
+    fun playPlaylist(playlistId: Int, startItemId: Int? = null) {
         viewModelScope.launch {
-            val mediaItems = playlistRepository.fetchPlaylistMediaList(playlistId)
+            val mediaList = playlistRepository.fetchPlaylistMediaList(playlistId)
+            val startItemIndex = mediaList.indexOfFirst { it.mediaId == startItemId }
             withContext(Dispatchers.Main) { //MediaController must use Main thread
                 controllerManager.playPlaylist(
-                    mediaItems = mediaItems,
+                    mediaItems = mediaList.map { it.toMediaItem() },
                     playlistId = playlistId,
+                    startItemIndex = startItemIndex,
                     startShuffled = isShuffleModeEnabled.value //Use current shuffle preference
                 )
             }
@@ -134,7 +136,7 @@ class MainViewModel @Inject constructor(
 
     fun addPlaylistToQueue(playlistId: Int) {
         viewModelScope.launch {
-            val mediaItems = playlistRepository.fetchPlaylistMediaList(playlistId)
+            val mediaItems = playlistRepository.fetchPlaylistMediaList(playlistId).map { it.toMediaItem() }
             withContext(Dispatchers.Main) { //MediaController must use Main thread
                 controllerManager.addToQueue(mediaItems)
                 sendUiEvent(UiEvent.ShowToast("Added playlist to queue"))

@@ -29,10 +29,8 @@ class PlaylistRepository @Inject constructor(
     //DB Actions
     fun getPlaylistById(id: Int): Flow<PlaylistEntity?> = playlistDao.getPlaylistById(id)
 
-    suspend fun fetchPlaylistMediaList(id: Int): List<MediaItem> = withContext(Dispatchers.IO) {
-        playlistDao.getMediaInPlaylist(id)
-            .first()
-            .map { it.toMediaItem() }
+    suspend fun fetchPlaylistMediaList(id: Int): List<MediaEntity> = withContext(Dispatchers.IO) {
+        playlistDao.getMediaInPlaylist(id).first()
     }
 
     suspend fun insertPlaylist(playlist: PlaylistEntity): Long = withContext(Dispatchers.IO) {
@@ -116,44 +114,4 @@ class PlaylistRepository @Inject constructor(
         }
         return updatedPlaylist
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    //suspend fun insertPlaylist(playlist: PlaylistEntity): Long = playlistDao.insertPlaylist(playlist)
-
-    //fun getPlaylistById(id: Int): Flow<PlaylistEntity?> = playlistDao.getPlaylistById(id)
-
-    //suspend fun updatePlaylist(playlist: PlaylistEntity) = playlistDao.updatePlaylist(playlist)
-
-    //suspend fun deletePlaylist(playlist: PlaylistEntity) = playlistDao.deletePlaylist(playlist)
-
-    //suspend fun addMediaToPlaylists(items: List<PlaylistMediaItem>) = playlistDao.addMediaToPlaylists(items)
-
-    //fun getAllMediaInPlaylist(playlistId: Int): Flow<List<MediaEntity>> = playlistDao.getMediaInPlaylist(playlistId)
-
-    //suspend fun getMediaNotInPlaylist(playlistId: Int): List<MediaEntity> = playlistDao.getMediaNotInPlaylist(playlistId)
-
-    //suspend fun getPlaylistsNotHavingMediaList(mediaIds: List<Int>) = playlistDao.getPlaylistsNotHavingMediaList(mediaIds.distinct())
-
-    //fun getPlaylistItemCount(playlistId: Int): Flow<Int> = playlistDao.getPlaylistItemCount(playlistId)
-
-//    suspend fun moveMediaItemPositionInPlaylist(playlistId: Int, fromMediaId: Int, toMediaId: Int, fromPos: Int, toPos: Int)
-//        = playlistDao.moveMediaItemPositionInPlaylist(playlistId, fromMediaId, toMediaId, fromPos + 1, toPos + 1)
-//        // + 1 because positionInPlaylist column is 1-based not 0-based
-
-    //suspend fun removeMediaFromPlaylist(mediaIds: List<Int>, playlistId: Int) = playlistDao.removeMediaFromPlaylist(mediaIds, playlistId)
-
-    //suspend fun getMaxPositionInPlaylist(playlistId: Int): Int? = playlistDao.getMaxPositionInPlaylist(playlistId)
 }
