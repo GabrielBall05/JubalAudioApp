@@ -1,5 +1,6 @@
 package com.example.offlineplayer.ui.viewmodels
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.offlineplayer.data.local.MediaEntity
@@ -91,7 +92,7 @@ class PlaylistDetailsViewModel @Inject constructor(
     fun toggleSelectAll() {
         _selectedMediaIds.value =
             if (_selectedMediaIds.value.size == filteredMedia.value.size) emptyList() //Deselect all
-            else filteredMedia.value.map { it.mediaId }.toList() //Select all
+            else filteredMedia.value.filter { !it.isStaleUri }.map { it.mediaId }.toList() //Select all
     }
 
     fun clearSelection() {
@@ -104,6 +105,15 @@ class PlaylistDetailsViewModel @Inject constructor(
 
     fun getCommonArtwork(ids: List<Int>): String? {
         return filteredMedia.value.filter { it.mediaId in ids }.getCommonArtwork()
+    }
+
+    fun relinkMedia(mediaId: Int, newUri: Uri) = launchWithoutLoading {
+        try {
+            mediaRepository.relinkMedia(mediaId, newUri)
+            sendUiEvent(UiEvent.ShowToast("File re-linked successfully."))
+        } catch (e: Exception) {
+            sendUiEvent(UiEvent.ShowToast("Failed to link new file."))
+        }
     }
 
     fun editPlaylist(playlist: PlaylistEntity) = launchWithoutLoading {

@@ -182,7 +182,7 @@ fun PlaylistsScreen(
     //Show MediaPicker if user clicks Add Media
     playlistToAddMedia?.let { currentPlaylist ->
         MediaPicker(
-            media = mediaNotInPlaylist,
+            media = mediaNotInPlaylist.filter { !it.isStaleUri },
             onDismiss = { playlistToAddMedia = null },
             onConfirm = { mediaIds ->
                 viewModel.addMediaToPlaylists(mediaIds, listOf(currentPlaylist.playlistId))

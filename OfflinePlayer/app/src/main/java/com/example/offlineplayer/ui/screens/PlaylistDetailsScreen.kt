@@ -1,6 +1,9 @@
 package com.example.offlineplayer.ui.screens
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
@@ -88,6 +91,7 @@ import com.example.offlineplayer.ui.components.dialogs.PlaylistPicker
 import com.example.offlineplayer.ui.components.listitems.MediaListItemReorderable
 import com.example.offlineplayer.ui.components.listitems.MediaListItemSelectable
 import com.example.offlineplayer.ui.components.listitems.MediaListItemStandard
+import com.example.offlineplayer.ui.components.listitems.StaleUriListItem
 import com.example.offlineplayer.ui.components.optionsheets.MediaOption
 import com.example.offlineplayer.ui.components.optionsheets.MediaOptionsSheetContent
 import com.example.offlineplayer.ui.components.optionsheets.PlaylistOption
@@ -146,7 +150,16 @@ fun PlaylistDetailsScreen(
     var editingPlaylist by rememberSaveable { mutableStateOf(false) }
     var creatingPlaylist by rememberSaveable { mutableStateOf(false) }
     var showDeletePlaylistConfirmation by rememberSaveable { mutableStateOf(false) }
+    var mediaIdToRelink by rememberSaveable { mutableStateOf<Int?>(null) }
 
+
+    //Single File Picker Launcher
+    val relinkLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        uri?.let { newUri -> mediaIdToRelink?.let { id ->
+            viewModel.relinkMedia(id, newUri)
+        } }
+        mediaIdToRelink = null
+    }
 
     //Jump to top of list when list size changes
     LaunchedEffect(mediaList.size) {
@@ -378,28 +391,40 @@ fun PlaylistDetailsScreen(
                             items = mediaList,
                             key = { it.mediaId }
                         ) { media ->
-                            //Animate transition between viewing/selectable list items
-                            AnimatedContent(
-                                targetState = isAnySelected,
-                                label = "MediaListItemTransition"
-                            ) { animatingSelectionMode ->
-                                if (animatingSelectionMode) { //Use selectable list item if selecting
-                                    MediaListItemSelectable(
-                                        media = media,
-                                        isSelected = selectedIds.contains(media.mediaId),
-                                        onSelect = { viewModel.toggleSelection(media.mediaId) },
-                                        constrainSelectToCheckbox = false,
-                                        onMoreClick = { selectedMediaItemForMenu = it }
-                                    )
-                                } else {
-                                    MediaListItemStandard( //Use standard viewing list item if not selecting
-                                        media = media,
-                                        onImageClick = { playlist?.let { playlist ->
-                                            onPlayPlaylistClick(playlist.playlistId, media.mediaId)
-                                        } },
-                                        onLongClick = { viewModel.toggleSelection(it.mediaId) },
-                                        onMoreClick = { selectedMediaItemForMenu = it }
-                                    )
+                            //Show stale list item if this media's uri is stale
+                            if (media.isStaleUri) {
+                                StaleUriListItem(
+                                    media = media,
+                                    onRelinkClick = {
+                                        mediaIdToRelink = media.mediaId
+                                        relinkLauncher.launch(arrayOf("audio/*"))
+                                    },
+                                    onDeleteClick = { idsToRemove = listOf(media.mediaId) }
+                                )
+                            } else { //Otherwise show appropriate list item (viewing/selectable)
+                                //Animate transition between viewing/selectable list items
+                                AnimatedContent(
+                                    targetState = isAnySelected,
+                                    label = "MediaListItemTransition"
+                                ) { animatingSelectionMode ->
+                                    if (animatingSelectionMode) { //Use selectable list item if selecting
+                                        MediaListItemSelectable(
+                                            media = media,
+                                            isSelected = selectedIds.contains(media.mediaId),
+                                            onSelect = { viewModel.toggleSelection(media.mediaId) },
+                                            constrainSelectToCheckbox = false,
+                                            onMoreClick = { selectedMediaItemForMenu = it }
+                                        )
+                                    } else {
+                                        MediaListItemStandard( //Use standard viewing list item if not selecting
+                                            media = media,
+                                            onImageClick = { playlist?.let { playlist ->
+                                                onPlayPlaylistClick(playlist.playlistId, media.mediaId)
+                                            } },
+                                            onLongClick = { viewModel.toggleSelection(it.mediaId) },
+                                            onMoreClick = { selectedMediaItemForMenu = it }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -555,7 +580,7 @@ fun PlaylistDetailsScreen(
     if (showMediaPicker && !isFetchingMedia) {
         playlist?.let { currentPlaylist ->
             MediaPicker(
-                media = mediaNotInPlaylist,
+                media = mediaNotInPlaylist.filter { !it.isStaleUri },
                 onDismiss = { showMediaPicker = false },
                 onConfirm = { mediaIds ->
                     showMediaPicker = false

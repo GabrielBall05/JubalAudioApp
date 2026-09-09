@@ -101,7 +101,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val numStale = mediaRepository.validateMediaUris()
             if (numStale > 0) sendUiEvent(
-                UiEvent.ShowToast("$numStale media have invalid file paths. Fix in Home page.")
+                UiEvent.ShowToast("$numStale media have invalid file paths. View in Home screen via filter option.")
             )
         }
     }
@@ -131,7 +131,7 @@ class HomeViewModel @Inject constructor(
     fun toggleSelectAll() {
         _selectedMediaIds.value =
             if (_selectedMediaIds.value.size == filteredMedia.value.size) emptyList() //Deselect all
-            else filteredMedia.value.map { it.mediaId }.toList() //Select all
+            else filteredMedia.value.filter { !it.isStaleUri }.map { it.mediaId }.toList() //Select all
     }
 
     fun clearSelection() {

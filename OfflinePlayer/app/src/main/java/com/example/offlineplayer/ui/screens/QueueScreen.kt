@@ -177,7 +177,7 @@ fun QueueScreen(
                     else {
                         append("End of timeline.")
                         if (infinitePlaybackSetting) {
-                            append("No currently active playlist to repeat.")
+                            append(" No currently active playlist to repeat.")
                         }
                     }
                 },
