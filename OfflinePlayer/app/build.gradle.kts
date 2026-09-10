@@ -6,13 +6,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.offlineplayer"
+    namespace = "com.devball.jubalaudio"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.example.offlineplayer"
+        applicationId = "com.devball.jubalaudio"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

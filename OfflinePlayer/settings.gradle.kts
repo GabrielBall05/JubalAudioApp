@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "OfflinePlayer"
+rootProject.name = "JubalAudio"
 include(":app")
