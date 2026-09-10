@@ -2,13 +2,18 @@ package com.example.offlineplayer.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -30,7 +35,10 @@ import androidx.media3.common.MediaItem
 import com.example.offlineplayer.data.local.PlaylistEntity
 import com.example.offlineplayer.ui.components.dialogs.ConfirmationDialog
 import com.example.offlineplayer.ui.components.listitems.QueueItem
+import com.example.offlineplayer.ui.components.listitems.QueueItemImageSize
+import com.example.offlineplayer.ui.components.listitems.QueueItemPadding
 import com.example.offlineplayer.util.SwipeDismissable
+import com.example.offlineplayer.util.SwipeDismissableBackground
 
 @Composable
 fun QueueScreen(
@@ -115,7 +123,14 @@ fun QueueScreen(
                 items = manualQueue,
                 key = { _, item -> "manual_${item.mediaId}_${item.hashCode()}" }
             ) { index, item ->
-                SwipeDismissable(onDismiss = { onRemoveItemAtIndex(index, true) }) {
+                SwipeDismissable(
+                    onDismiss = { onRemoveItemAtIndex(index, true) },
+                    background = { SwipeDismissableBackground(
+                        imageVector = Icons.Default.DeleteOutline,
+                        modifier = Modifier.padding(QueueItemPadding),
+                        iconSize = QueueItemImageSize
+                    ) }
+                ) {
                     QueueItem(
                         item = item,
                         isFirst = (index == 0),
@@ -146,7 +161,14 @@ fun QueueScreen(
                 items = upNext,
                 key = { _, item -> "upnext_${item.mediaId}_${item.hashCode()}" }
             ) { index, item ->
-                SwipeDismissable(onDismiss = { onRemoveItemAtIndex(index, false) }) {
+                SwipeDismissable(
+                    onDismiss = { onRemoveItemAtIndex(index, false) },
+                    background = { SwipeDismissableBackground(
+                        imageVector = Icons.Default.DeleteOutline,
+                        modifier = Modifier.padding(QueueItemPadding),
+                        iconSize = QueueItemImageSize
+                    ) }
+                ) {
                     QueueItem(
                         item = item,
                         isFirst = (index == 0),

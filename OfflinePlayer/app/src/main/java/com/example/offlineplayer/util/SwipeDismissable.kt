@@ -21,54 +21,60 @@ import kotlin.math.roundToInt
 fun SwipeDismissable(
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
+    background: @Composable () -> Unit = {},
     content: @Composable () -> Unit
 ) {
     val offsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val velocityTracker = remember { VelocityTracker() }
 
-    Box(
-        modifier = modifier
-            .offset { IntOffset(offsetX.value.roundToInt(), 0) }
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures(
-                    onDragStart = { velocityTracker.resetTracking() },
-                    onDragEnd = {
-                        val velocity = velocityTracker.calculateVelocity().x
-                        val targetWidth = size.width.toFloat()
+    Box(modifier = modifier) {
+        background() //Render optional background behind the swipeable content
 
-                        //Dismiss if swiped 30% OR if flicked fast to the right
-                        if (offsetX.value > targetWidth * 0.3f || velocity > 1000f) {
-                            scope.launch {
-                                offsetX.animateTo(
-                                    targetWidth,
-                                    tween(150)
-                                )
-                                onDismiss()
+        //Actual foreground content
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(offsetX.value.roundToInt(), 0) }
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragStart = { velocityTracker.resetTracking() },
+                        onDragEnd = {
+                            val velocity = velocityTracker.calculateVelocity().x
+                            val targetWidth = size.width.toFloat()
+
+                            //Dismiss if swiped 30% OR if flicked fast to the right
+                            if (offsetX.value > targetWidth * 0.3f || velocity > 1000f) {
+                                scope.launch {
+                                    offsetX.animateTo(
+                                        targetWidth,
+                                        tween(150)
+                                    )
+                                    onDismiss()
+                                }
+                            } else {
+                                scope.launch {
+                                    offsetX.animateTo(
+                                        0f,
+                                        spring(stiffness = Spring.StiffnessLow)
+                                    )
+                                }
                             }
-                        } else {
+                        },
+                        onDragCancel = {
                             scope.launch {
-                                offsetX.animateTo(
-                                    0f,
-                                    spring(stiffness = Spring.StiffnessLow)
-                                )
+                                offsetX.animateTo(0f, tween(200))
                             }
+                        },
+                        onHorizontalDrag = { change, dragAmount ->
+                            change.consume()
+                            velocityTracker.addPosition(change.uptimeMillis, change.position)
+                            val newOffset = (offsetX.value + dragAmount).coerceAtLeast(0f)
+                            scope.launch { offsetX.snapTo(newOffset) }
                         }
-                    },
-                    onDragCancel = {
-                        scope.launch {
-                            offsetX.animateTo(0f, tween(200))
-                        }
-                    },
-                    onHorizontalDrag = { change, dragAmount ->
-                        change.consume()
-                        velocityTracker.addPosition(change.uptimeMillis, change.position)
-                        val newOffset = (offsetX.value + dragAmount).coerceAtLeast(0f)
-                        scope.launch { offsetX.snapTo(newOffset) }
-                    }
-                )
-            }
-    ) {
-        content()
+                    )
+                }
+        ) {
+            content()
+        }
     }
 }

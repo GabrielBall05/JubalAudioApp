@@ -4,6 +4,7 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,6 +24,9 @@ import androidx.media3.common.MediaItem
 import com.example.offlineplayer.ui.components.common.InfoColumnMarquee
 import com.example.offlineplayer.ui.components.common.SurfacedImage
 
+val QueueItemPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
+val QueueItemImageSize = 50.dp
+
 @Composable
 fun QueueItem(
     item: MediaItem,
@@ -37,7 +41,7 @@ fun QueueItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(QueueItemPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
         //Artwork
@@ -48,7 +52,7 @@ fun QueueItem(
             ),
             model = item.mediaMetadata.artworkUri.toString(),
             contentDescription = "Queue Item Artwork",
-            sizeInDp = 50.dp
+            sizeInDp = QueueItemImageSize
         )
 
         //Queue (Media) Item Info
