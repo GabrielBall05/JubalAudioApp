@@ -110,7 +110,7 @@ class MainViewModel @Inject constructor(
             }
         }
 
-        //Watch for player error messages
+        //Watch for player error messages for UI events
         viewModelScope.launch {
             controllerManager.errorMessage.collect { message ->
                 sendUiEvent(UiEvent.ShowToast(message))
@@ -130,6 +130,7 @@ class MainViewModel @Inject constructor(
     fun playPlaylist(playlistId: Int, startItemId: Int? = null) {
         viewModelScope.launch {
             val mediaList = playlistRepository.fetchPlaylistMediaList(playlistId)
+                .filter { !it.isStaleUri }
             val startItemIndex = mediaList.indexOfFirst { it.mediaId == startItemId }
             withContext(Dispatchers.Main) { //MediaController must use Main thread
                 controllerManager.playPlaylist(
@@ -144,7 +145,9 @@ class MainViewModel @Inject constructor(
 
     fun addPlaylistToQueue(playlistId: Int) {
         viewModelScope.launch {
-            val mediaItems = playlistRepository.fetchPlaylistMediaList(playlistId).map { it.toMediaItem() }
+            val mediaItems = playlistRepository.fetchPlaylistMediaList(playlistId)
+                .filter { !it.isStaleUri }
+                .map { it.toMediaItem() }
             withContext(Dispatchers.Main) { //MediaController must use Main thread
                 controllerManager.addToQueue(mediaItems)
                 sendUiEvent(UiEvent.ShowToast("Added playlist to queue"))
@@ -153,11 +156,15 @@ class MainViewModel @Inject constructor(
     }
 
     fun addMediaToQueue(mediaList: List<MediaEntity>) {
-        controllerManager.addToQueue(mediaList.map { it.toMediaItem() })
+        controllerManager.addToQueue(mediaList
+            .filter { !it.isStaleUri }
+            .map { it.toMediaItem() })
         sendUiEvent(UiEvent.ShowToast("Added ${mediaList.size} item${if (mediaList.size > 1) "s" else ""} to queue"))
     }
 
-    fun playMediaNow(media: MediaEntity) = controllerManager.playNow(media.toMediaItem())
+    fun playMediaNow(media: MediaEntity) = {
+        if (!media.isStaleUri) controllerManager.playNow(media.toMediaItem())
+    }
 
     fun clearQueue() = controllerManager.clearQueue()
 

@@ -4,17 +4,22 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.automirrored.filled.Sort
@@ -23,6 +28,9 @@ import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.AddToQueue
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -31,9 +39,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +51,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -66,6 +77,7 @@ import com.example.offlineplayer.ui.viewmodels.HomeViewModel
 import com.example.offlineplayer.util.MediaSortOrder
 import com.example.offlineplayer.util.ObserveUiEvents
 import com.example.offlineplayer.util.UiEvent
+import com.example.offlineplayer.util.indicatorBorder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,6 +99,8 @@ fun HomeScreen(
     val availablePlaylists by viewModel.availablePlaylists.collectAsStateWithLifecycle()
     val sortOrder by viewModel.sortOrder.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val allStaleMedia by viewModel.allStaleMedia.collectAsStateWithLifecycle()
+    val staleListForDisplay by remember { derivedStateOf { mediaList.filter { it.isStaleUri } } }
 
     val sheetState = rememberModalBottomSheetState()
     val listState = rememberLazyListState()
@@ -100,6 +114,7 @@ fun HomeScreen(
     var showSortDialog by rememberSaveable { mutableStateOf(false) }
     var creatingPlaylist by rememberSaveable { mutableStateOf(false) }
     var mediaIdToRelink by rememberSaveable { mutableStateOf<Int?>(null) }
+    var showOnlyStale by rememberSaveable { mutableStateOf(false) }
 
     //Bulk File Picker launcher
     val filePickerLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenMultipleDocuments()) { uris: List<Uri> ->
@@ -114,16 +129,19 @@ fun HomeScreen(
         mediaIdToRelink = null
     }
 
-    //Jump to top of list when list size changes or sort order is changed
-    LaunchedEffect(mediaList.size, sortOrder) {
-        if (mediaList.isNotEmpty()) {
-            listState.scrollToItem(0)
-        }
+    //Jump to top of list when list size changes, sort order is changed, or stale list only toggled
+    LaunchedEffect(mediaList.size, sortOrder, showOnlyStale) {
+        if (mediaList.isNotEmpty()) listState.scrollToItem(0)
     }
 
     //Refresh available playlists when the selection for playlist addition is set
     LaunchedEffect(idsToAddToPlaylists, availablePlaylists.size) {
         if (idsToAddToPlaylists.isNotEmpty()) viewModel.refreshAvailablePlaylists(idsToAddToPlaylists)
+    }
+
+    //Reset stale filter if all stale items are resolved
+    LaunchedEffect(allStaleMedia.isEmpty()) {
+        if (allStaleMedia.isEmpty() && showOnlyStale) showOnlyStale = false
     }
 
 
@@ -159,30 +177,72 @@ fun HomeScreen(
                     onValueChange = { viewModel.onSearchQueryChange(it) }
                 )
 
+                //Show Stale Media Button
+                if (allStaleMedia.isNotEmpty()) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(
+                        modifier = Modifier
+                            .indicatorBorder(enabled = showOnlyStale, color = MaterialTheme.colorScheme.error)
+                            .clip(CircleShape),
+                        onClick = { showOnlyStale = !showOnlyStale }
+                    ) {
+                        Icon(
+                            modifier = Modifier.fillMaxSize(),
+                            imageVector = Icons.Default.Error,
+                            tint = MaterialTheme.colorScheme.error,
+                            contentDescription = "Show Invalid Media"
+                        )
+                    }
+                }
+
                 //Sort
                 IconButton(onClick = { showSortDialog = true }) {
                     Icon(Icons.AutoMirrored.Default.Sort, contentDescription = "Sort List")
                 }
             }
 
-            //Bulk Actions
-            BulkActionsBar(
-                isAnySelected = isAnySelected,
-                isAllSelected = isAllSelected,
-                onToggleAllClick = { viewModel.toggleSelectAll() },
-                onClearSelectionClick = { viewModel.clearSelection() }
-            ) {
-                IconButton(onClick = { idsToEdit = selectedIds.toList() }) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+            if (!showOnlyStale) {
+                //Bulk Actions
+                BulkActionsBar(
+                    isAnySelected = isAnySelected,
+                    isAllSelected = isAllSelected,
+                    onToggleAllClick = { viewModel.toggleSelectAll() },
+                    onClearSelectionClick = { viewModel.clearSelection() }
+                ) {
+                    IconButton(onClick = { idsToEdit = selectedIds.toList() }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    }
+                    IconButton(onClick = { idsToAddToPlaylists = selectedIds.toList() }) {
+                        Icon(Icons.AutoMirrored.Filled.PlaylistAdd, contentDescription = "Add To Playlist")
+                    }
+                    IconButton(onClick = { onAddToQueueClick(selectedIds.mapNotNull { id -> mediaMap[id] }) }) {
+                        Icon(Icons.Default.AddToQueue, contentDescription = "Add Selection to Queue")
+                    }
+                    IconButton(onClick = { idsToDelete = selectedIds.toList() }) {
+                        Icon(Icons.Default.DeleteForever, tint = MaterialTheme.colorScheme.error, contentDescription = "Delete")
+                    }
                 }
-                IconButton(onClick = { idsToAddToPlaylists = selectedIds.toList() }) {
-                    Icon(Icons.AutoMirrored.Filled.PlaylistAdd, contentDescription = "Add To Playlist")
-                }
-                IconButton(onClick = { onAddToQueueClick(selectedIds.mapNotNull { id -> mediaMap[id] }) }) {
-                    Icon(Icons.Default.AddToQueue, contentDescription = "Add Selection to Queue")
-                }
-                IconButton(onClick = { idsToDelete = selectedIds.toList() }) {
-                    Icon(Icons.Default.DeleteForever, tint = MaterialTheme.colorScheme.error, contentDescription = "Delete")
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(start = 16.dp, end = 8.dp),
+                    horizontalArrangement = Arrangement.Absolute.Left,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.labelLarge,
+                        text = "The following have invalid file paths.\nFix using relink buttons or delete."
+                    )
+                    TextButton(
+                        onClick = { idsToDelete = allStaleMedia.map { it.mediaId } },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Delete ALL")
+                    }
                 }
             }
 
@@ -198,36 +258,90 @@ fun HomeScreen(
                     item {
                         EmptyMessage(text = "You have no items uploaded. Add some using the \"+\" button at the bottom-right of your screen.")
                     }
-                } else if (mediaList.isEmpty()) {
-                    item {
-                        EmptyMessage(text = "No matches found.")
-                    }
                 } else {
-                    items(
-                        items = mediaList,
-                        key = { it.mediaId }
-                    ) { media ->
-                        //Show selectable list item under normal circumstances
-                        if (!media.isStaleUri) {
-                            MediaListItemSelectable(
-                                media = media,
-                                isSelected = selectedIds.contains(media.mediaId),
-                                onSelect = { viewModel.toggleSelection(media.mediaId) },
-                                constrainSelectToCheckbox = false,
-                                onMoreClick = { selectedMediaItemForMenu = media }
-                            )
-                        } else { //Show error list item when uri is stale
-                            StaleUriListItem(
-                                media = media,
-                                onRelinkClick = {
-                                    mediaIdToRelink = media.mediaId
-                                    relinkLauncher.launch(arrayOf("audio/*"))
-                                },
-                                onDeleteClick = { idsToDelete = listOf(media.mediaId) }
-                            )
+                    val activeList = if (showOnlyStale) staleListForDisplay else mediaList
+
+                    if (activeList.isEmpty()) {
+                        item {
+                            EmptyMessage(text = if (showOnlyStale) "No invalid media match your search." else "No matches found.")
+                        }
+                    } else {
+                        items(
+                            items = activeList,
+                            key = { it.mediaId }
+                        ) { media ->
+                            //Show selectable list item under normal circumstances
+                            if (!media.isStaleUri) {
+                                MediaListItemSelectable(
+                                    media = media,
+                                    isSelected = selectedIds.contains(media.mediaId),
+                                    onSelect = { viewModel.toggleSelection(media.mediaId) },
+                                    constrainSelectToCheckbox = false,
+                                    onMoreClick = { selectedMediaItemForMenu = media }
+                                )
+                            } else { //Show error list item when uri is stale
+                                StaleUriListItem(
+                                    media = media,
+                                    onRelinkClick = {
+                                        mediaIdToRelink = media.mediaId
+                                        relinkLauncher.launch(arrayOf("audio/*"))
+                                    },
+                                    onDeleteClick = { idsToDelete = listOf(media.mediaId) }
+                                )
+                            }
                         }
                     }
                 }
+//                if (!hasMedia) {
+//                    item {
+//                        EmptyMessage(text = "You have no items uploaded. Add some using the \"+\" button at the bottom-right of your screen.")
+//                    }
+//                } else if (mediaList.isEmpty()) {
+//                    item {
+//                        EmptyMessage(text = "No matches found.")
+//                    }
+//                } else {
+//                    if (showOnlyStale) {
+//                        items(
+//                            items = staleList,
+//                            key = { it.mediaId }
+//                        ) { media ->
+//                            StaleUriListItem(
+//                                media = media,
+//                                onRelinkClick = {
+//                                    mediaIdToRelink = media.mediaId
+//                                    relinkLauncher.launch(arrayOf("audio/*"))
+//                                },
+//                                onDeleteClick = { idsToDelete = listOf(media.mediaId) }
+//                            )
+//                        }
+//                    } else {
+//                        items(
+//                            items = mediaList,
+//                            key = { it.mediaId }
+//                        ) { media ->
+//                            //Show selectable list item under normal circumstances
+//                            if (!media.isStaleUri) {
+//                                MediaListItemSelectable(
+//                                    media = media,
+//                                    isSelected = selectedIds.contains(media.mediaId),
+//                                    onSelect = { viewModel.toggleSelection(media.mediaId) },
+//                                    constrainSelectToCheckbox = false,
+//                                    onMoreClick = { selectedMediaItemForMenu = media }
+//                                )
+//                            } else { //Show error list item when uri is stale
+//                                StaleUriListItem(
+//                                    media = media,
+//                                    onRelinkClick = {
+//                                        mediaIdToRelink = media.mediaId
+//                                        relinkLauncher.launch(arrayOf("audio/*"))
+//                                    },
+//                                    onDeleteClick = { idsToDelete = listOf(media.mediaId) }
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
             }
         }
 

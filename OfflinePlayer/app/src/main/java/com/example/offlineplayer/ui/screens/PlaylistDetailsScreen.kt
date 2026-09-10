@@ -418,7 +418,7 @@ fun PlaylistDetailsScreen(
                                     } else {
                                         MediaListItemStandard( //Use standard viewing list item if not selecting
                                             media = media,
-                                            onImageClick = { playlist?.let { playlist ->
+                                            onImageClick = { if(!media.isStaleUri) playlist?.let { playlist ->
                                                 onPlayPlaylistClick(playlist.playlistId, media.mediaId)
                                             } },
                                             onLongClick = { viewModel.toggleSelection(it.mediaId) },

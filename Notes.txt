@@ -1,8 +1,6 @@
 TODO:
 
 longer toast messages
-Option to show only stale uri (invalid file path) items in home screen (include this button next to search bar + filter button)
-	include button to delete all (but no bulk relinking)
 better toggleShuffle logic
 definitely move around the add buttons
 remove from queue/upnext

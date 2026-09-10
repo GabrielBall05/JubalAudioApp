@@ -15,6 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -68,6 +69,10 @@ class HomeViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
+
+    val allStaleMedia = _allMedia.map { list ->
+        list.filter { it.isStaleUri }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     //Selection variables
     private val _selectedMediaIds = MutableStateFlow<List<Int>>(emptyList())
@@ -131,7 +136,10 @@ class HomeViewModel @Inject constructor(
     fun toggleSelectAll() {
         _selectedMediaIds.value =
             if (_selectedMediaIds.value.size == filteredMedia.value.size) emptyList() //Deselect all
-            else filteredMedia.value.filter { !it.isStaleUri }.map { it.mediaId }.toList() //Select all
+            else filteredMedia.value //Select all
+                .filter { !it.isStaleUri }
+                .map { it.mediaId }
+                .toList()
     }
 
     fun clearSelection() {

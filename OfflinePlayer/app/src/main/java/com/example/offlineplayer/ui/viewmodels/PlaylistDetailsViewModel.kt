@@ -92,7 +92,10 @@ class PlaylistDetailsViewModel @Inject constructor(
     fun toggleSelectAll() {
         _selectedMediaIds.value =
             if (_selectedMediaIds.value.size == filteredMedia.value.size) emptyList() //Deselect all
-            else filteredMedia.value.filter { !it.isStaleUri }.map { it.mediaId }.toList() //Select all
+            else filteredMedia.value //Select all
+                .filter { !it.isStaleUri }
+                .map { it.mediaId }
+                .toList()
     }
 
     fun clearSelection() {
