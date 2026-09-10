@@ -1,6 +1,6 @@
 TODO:
 
-rename file explorer folder and github
+rename file explorer folder and github test
 longer toast messages (mainly for use by "found invalid file paths" message)
 better toggleShuffle logic (use mcm on web first, then try Ask)
 definitely move around the add buttons
