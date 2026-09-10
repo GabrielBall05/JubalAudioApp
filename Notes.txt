@@ -1,11 +1,12 @@
 TODO:
 
+remove from queue/upnext - add remove icon in background when swiping 
+PACKAGE NAME
 longer toast messages
 better toggleShuffle logic
 definitely move around the add buttons
-remove from queue/upnext
-
 select newly imported media
+
 reordering in a playlist is a little difficult if youre at the top or bottom of the list
 log statements everywhere (and improve its tag/message)
 horizontal orientation layouts - or just only allow vertical
@@ -14,6 +15,7 @@ swipe image in explanded player screen to go next/prev
 when copying/storing images, maybe try to make sure there are no duplicated or orphaned images to save space on phone
 move the add media button to bottom nav bar. maybe do snackbar instead of toasts because it won't be a problem anymore
 thoroughly comment code and just make it look better
+better file organization
 maybe: drag for reordering
 maybe: widget
 maybe: audio equalization setting

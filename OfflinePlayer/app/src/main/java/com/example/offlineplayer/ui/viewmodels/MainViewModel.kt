@@ -162,7 +162,7 @@ class MainViewModel @Inject constructor(
         sendUiEvent(UiEvent.ShowToast("Added ${mediaList.size} item${if (mediaList.size > 1) "s" else ""} to queue"))
     }
 
-    fun playMediaNow(media: MediaEntity) = {
+    fun playMediaNow(media: MediaEntity) {
         if (!media.isStaleUri) controllerManager.playNow(media.toMediaItem())
     }
 
@@ -173,9 +173,7 @@ class MainViewModel @Inject constructor(
 
     fun manualQueueSkipToIndex(index: Int) = controllerManager.manualQueueSkipToIndex(index)
     fun upNextSkipToIndex(index: Int) = controllerManager.upNextSkipToIndex(index)
-
-    fun manualQueueRemoveItemAtIndex(index: Int) = controllerManager.manualQueueRemoveItemAtIndex(index)
-    fun upNextRemoveItemAtIndex(index: Int) = controllerManager.upNextRemoveItemAtIndex(index)
+    fun removeItemAtIndex(index: Int, isManual: Boolean) = controllerManager.removeItemAtIndex(index, isManual)
 
     //Database actions
     fun removeFromPlaylist(mediaId: Int, playlistId: Int) = launchWithoutLoading {

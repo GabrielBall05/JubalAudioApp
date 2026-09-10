@@ -406,8 +406,9 @@ fun ExpandedPlayerScreen(
                         },
                         onManualQueueSkipToIndex = { viewModel.manualQueueSkipToIndex(it) },
                         onUpNextSkipToIndex = { viewModel.upNextSkipToIndex(it) },
-                        onManualQueueRemoveItemAtIndex = { viewModel.manualQueueRemoveItemAtIndex(it) },
-                        onUpNextRemoveItemAtIndex = { viewModel.upNextRemoveItemAtIndex(it) }
+                        onRemoveItemAtIndex = { index, isManual ->
+                            viewModel.removeItemAtIndex(index, isManual)
+                        }
                     )
                 }
             }

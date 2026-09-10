@@ -3,12 +3,9 @@ package com.example.offlineplayer.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -21,25 +18,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import com.example.offlineplayer.data.local.PlaylistEntity
 import com.example.offlineplayer.ui.components.dialogs.ConfirmationDialog
 import com.example.offlineplayer.ui.components.listitems.QueueItem
-import kotlinx.coroutines.launch
+import com.example.offlineplayer.util.SwipeDismissable
 
 @Composable
 fun QueueScreen(
@@ -55,8 +46,7 @@ fun QueueScreen(
     onMoveUpNextItem: (Int, Int) -> Unit,
     onManualQueueSkipToIndex: (Int) -> Unit,
     onUpNextSkipToIndex: (Int) -> Unit,
-    onManualQueueRemoveItemAtIndex: (Int) -> Unit, //TODO: Implement
-    onUpNextRemoveItemAtIndex: (Int) -> Unit //TODO: Implement
+    onRemoveItemAtIndex: (Int, Boolean) -> Unit
 ) {
     BackHandler(onBack = onDismiss)
 
@@ -121,18 +111,23 @@ fun QueueScreen(
                     }
                 }
             }
-            itemsIndexed(manualQueue) { index, item ->
-                QueueItem(
-                    item = item,
-                    isFirst = (index == 0),
-                    isLast = (index == manualQueue.size - 1),
-                    onClick = {
-                        onManualQueueSkipToIndex(index)
-                        scrollToTopTrigger++
-                    },
-                    onMoveUp = { onMoveManualQueueItem(index, index - 1) },
-                    onMoveDown = { onMoveManualQueueItem(index, index + 1) }
-                )
+            itemsIndexed(
+                items = manualQueue,
+                key = { _, item -> "manual_${item.mediaId}_${item.hashCode()}" }
+            ) { index, item ->
+                SwipeDismissable(onDismiss = { onRemoveItemAtIndex(index, true) }) {
+                    QueueItem(
+                        item = item,
+                        isFirst = (index == 0),
+                        isLast = (index == manualQueue.size - 1),
+                        onClick = {
+                            onManualQueueSkipToIndex(index)
+                            scrollToTopTrigger++
+                        },
+                        onMoveUp = { onMoveManualQueueItem(index, index - 1) },
+                        onMoveDown = { onMoveManualQueueItem(index, index + 1) }
+                    )
+                }
             }
         }
 
@@ -147,18 +142,23 @@ fun QueueScreen(
                     fontWeight = FontWeight.Bold
                 )
             }
-            itemsIndexed(upNext) { index, item ->
-                QueueItem(
-                    item = item,
-                    isFirst = (index == 0),
-                    isLast = (index == upNext.size - 1),
-                    onClick = {
-                        onUpNextSkipToIndex(index)
-                        scrollToTopTrigger++
-                    },
-                    onMoveUp = { onMoveUpNextItem(index, index - 1) },
-                    onMoveDown = { onMoveUpNextItem(index, index + 1) }
-                )
+            itemsIndexed(
+                items = upNext,
+                key = { _, item -> "upnext_${item.mediaId}_${item.hashCode()}" }
+            ) { index, item ->
+                SwipeDismissable(onDismiss = { onRemoveItemAtIndex(index, false) }) {
+                    QueueItem(
+                        item = item,
+                        isFirst = (index == 0),
+                        isLast = (index == upNext.size - 1),
+                        onClick = {
+                            onUpNextSkipToIndex(index)
+                            scrollToTopTrigger++
+                        },
+                        onMoveUp = { onMoveUpNextItem(index, index - 1) },
+                        onMoveDown = { onMoveUpNextItem(index, index + 1) }
+                    )
+                }
             }
         }
 

@@ -283,19 +283,14 @@ class MediaControllerManager @Inject constructor(
         player.play()
     }
 
-    fun manualQueueRemoveItemAtIndex(index: Int) {
+    fun removeItemAtIndex(index: Int, isManual: Boolean) {
         val player = controller ?: return
-        if (index !in _manualQueueState.value.indices) return
+        if (isManual && index !in _manualQueueState.value.indices) return
+        if (!isManual && index !in _upNextState.value.indices) return
 
-        val actualIndex = player.currentMediaItemIndex + 1 + index
-        player.removeMediaItem(actualIndex)
-    }
+        var actualIndex = player.currentMediaItemIndex + 1 + index
+        if (!isManual) actualIndex += _manualQueueState.value.size
 
-    fun upNextRemoveItemAtIndex(index: Int) {
-        val player = controller ?: return
-        if (index !in _upNextState.value.indices) return
-
-        val actualIndex = player.currentMediaItemIndex + 1 + _manualQueueState.value.size + index
         player.removeMediaItem(actualIndex)
     }
 

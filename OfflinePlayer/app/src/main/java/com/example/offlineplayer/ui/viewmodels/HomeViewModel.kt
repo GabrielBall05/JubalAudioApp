@@ -105,7 +105,7 @@ class HomeViewModel @Inject constructor(
         //Validate URI integrity and notify user if applicable
         viewModelScope.launch {
             val numStale = mediaRepository.validateMediaUris()
-            if (numStale > 0) sendUiEvent(
+            if (numStale > 0) sendUiEvent( //TODO: LONGER TOAST MESSAGE DURATION
                 UiEvent.ShowToast("$numStale media have invalid file paths. View in Home screen via filter option.")
             )
         }

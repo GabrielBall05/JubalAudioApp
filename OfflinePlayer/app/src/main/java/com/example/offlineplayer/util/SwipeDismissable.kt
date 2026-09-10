@@ -19,8 +19,8 @@ import kotlin.math.roundToInt
 
 @Composable
 fun SwipeDismissable(
-    onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    onDismiss: () -> Unit,
     content: @Composable () -> Unit
 ) {
     val offsetX = remember { Animatable(0f) }
