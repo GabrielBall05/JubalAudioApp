@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.AddToQueue
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Edit
@@ -138,213 +140,165 @@ fun HomeScreen(
 
 
     //Screen UI
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            //Page Title
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 6.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Add or Edit Media",
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
+    Column(modifier = Modifier.fillMaxSize()) {
+        //Page Title
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 6.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Add or Edit Media",
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
 
-            //Search + Filter
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                //Search Bar
-                SearchBar(
-                    value = searchQuery,
-                    placeHolderText = "Search media...",
-                    modifier = Modifier.weight(1f),
-                    onClear = { viewModel.onSearchQueryChange("") },
-                    onValueChange = { viewModel.onSearchQueryChange(it) }
-                )
+        //Search + Sort
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            //Search Bar
+            SearchBar(
+                value = searchQuery,
+                placeHolderText = "Search all media...",
+                modifier = Modifier.weight(1f),
+                onClear = { viewModel.onSearchQueryChange("") },
+                onValueChange = { viewModel.onSearchQueryChange(it) }
+            )
 
-                //Show Stale Media Button
-                if (allStaleMedia.isNotEmpty()) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    IconButton(
-                        modifier = Modifier
-                            .indicatorBorder(enabled = showOnlyStale, color = MaterialTheme.colorScheme.error)
-                            .clip(CircleShape),
-                        onClick = { showOnlyStale = !showOnlyStale }
-                    ) {
-                        Icon(
-                            modifier = Modifier.fillMaxSize(),
-                            imageVector = Icons.Default.Error,
-                            tint = MaterialTheme.colorScheme.error,
-                            contentDescription = "Show Invalid Media"
-                        )
-                    }
-                }
-
-                //Sort
-                IconButton(onClick = { showSortDialog = true }) {
-                    Icon(Icons.AutoMirrored.Default.Sort, contentDescription = "Sort List")
-                }
-            }
-
-            if (!showOnlyStale) {
-                //Bulk Actions
-                BulkActionsBar(
-                    isAnySelected = isAnySelected,
-                    isAllSelected = isAllSelected,
-                    onToggleAllClick = { viewModel.toggleSelectAll() },
-                    onClearSelectionClick = { viewModel.clearSelection() }
-                ) {
-                    IconButton(onClick = { idsToEdit = selectedIds.toList() }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
-                    }
-                    IconButton(onClick = { idsToAddToPlaylists = selectedIds.toList() }) {
-                        Icon(Icons.AutoMirrored.Filled.PlaylistAdd, contentDescription = "Add To Playlist")
-                    }
-                    IconButton(onClick = { onAddToQueueClick(selectedIds.mapNotNull { id -> mediaMap[id] }) }) {
-                        Icon(Icons.Default.AddToQueue, contentDescription = "Add Selection to Queue")
-                    }
-                    IconButton(onClick = { idsToDelete = selectedIds.toList() }) {
-                        Icon(Icons.Default.DeleteForever, tint = MaterialTheme.colorScheme.error, contentDescription = "Delete")
-                    }
-                }
-            } else {
-                Row(
+            //Show Stale Media Button
+            if (allStaleMedia.isNotEmpty()) {
+                Spacer(modifier = Modifier.width(6.dp))
+                IconButton(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .padding(start = 16.dp, end = 8.dp),
-                    horizontalArrangement = Arrangement.Absolute.Left,
-                    verticalAlignment = Alignment.CenterVertically
+                        .indicatorBorder(enabled = showOnlyStale, color = MaterialTheme.colorScheme.error)
+                        .clip(CircleShape),
+                    onClick = { showOnlyStale = !showOnlyStale }
                 ) {
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.labelLarge,
-                        text = "The following have invalid file paths.\nFix using relink buttons or delete."
+                    Icon(
+                        modifier = Modifier.fillMaxSize(),
+                        imageVector = Icons.Default.Error,
+                        tint = MaterialTheme.colorScheme.error,
+                        contentDescription = "Show Invalid Media"
                     )
-                    TextButton(
-                        onClick = { idsToDelete = allStaleMedia.map { it.mediaId } },
-                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
-                    ) {
-                        Text("Delete ALL")
-                    }
                 }
             }
 
-            //Media List
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(top = 6.dp),
-                contentPadding = PaddingValues(bottom = 80.dp)
-            ) {
-                if (!hasMedia) {
-                    item {
-                        EmptyMessage(text = "You have no items uploaded. Add some using the \"+\" button at the bottom-right of your screen.")
-                    }
-                } else {
-                    val activeList = if (showOnlyStale) staleListForDisplay else mediaList
+            //Sort
+            IconButton(onClick = { showSortDialog = true }) {
+                Icon(
+                    modifier = Modifier.fillMaxSize(),
+                    imageVector = Icons.AutoMirrored.Default.Sort,
+                    contentDescription = "Sort List"
+                )
+            }
 
-                    if (activeList.isEmpty()) {
-                        item {
-                            EmptyMessage(text = if (showOnlyStale) "No invalid media match your search." else "No matches found.")
-                        }
-                    } else {
-                        items(
-                            items = activeList,
-                            key = { it.mediaId }
-                        ) { media ->
-                            //Show selectable list item under normal circumstances
-                            if (!media.isStaleUri) {
-                                MediaListItemSelectable(
-                                    media = media,
-                                    isSelected = selectedIds.contains(media.mediaId),
-                                    onSelect = { viewModel.toggleSelection(media.mediaId) },
-                                    constrainSelectToCheckbox = false,
-                                    onMoreClick = { selectedMediaItemForMenu = media }
-                                )
-                            } else { //Show error list item when uri is stale
-                                StaleUriListItem(
-                                    media = media,
-                                    onRelinkClick = {
-                                        mediaIdToRelink = media.mediaId
-                                        relinkLauncher.launch(arrayOf("audio/*"))
-                                    },
-                                    onDeleteClick = { idsToDelete = listOf(media.mediaId) }
-                                )
-                            }
-                        }
-                    }
-                }
-//                if (!hasMedia) {
-//                    item {
-//                        EmptyMessage(text = "You have no items uploaded. Add some using the \"+\" button at the bottom-right of your screen.")
-//                    }
-//                } else if (mediaList.isEmpty()) {
-//                    item {
-//                        EmptyMessage(text = "No matches found.")
-//                    }
-//                } else {
-//                    if (showOnlyStale) {
-//                        items(
-//                            items = staleList,
-//                            key = { it.mediaId }
-//                        ) { media ->
-//                            StaleUriListItem(
-//                                media = media,
-//                                onRelinkClick = {
-//                                    mediaIdToRelink = media.mediaId
-//                                    relinkLauncher.launch(arrayOf("audio/*"))
-//                                },
-//                                onDeleteClick = { idsToDelete = listOf(media.mediaId) }
-//                            )
-//                        }
-//                    } else {
-//                        items(
-//                            items = mediaList,
-//                            key = { it.mediaId }
-//                        ) { media ->
-//                            //Show selectable list item under normal circumstances
-//                            if (!media.isStaleUri) {
-//                                MediaListItemSelectable(
-//                                    media = media,
-//                                    isSelected = selectedIds.contains(media.mediaId),
-//                                    onSelect = { viewModel.toggleSelection(media.mediaId) },
-//                                    constrainSelectToCheckbox = false,
-//                                    onMoreClick = { selectedMediaItemForMenu = media }
-//                                )
-//                            } else { //Show error list item when uri is stale
-//                                StaleUriListItem(
-//                                    media = media,
-//                                    onRelinkClick = {
-//                                        mediaIdToRelink = media.mediaId
-//                                        relinkLauncher.launch(arrayOf("audio/*"))
-//                                    },
-//                                    onDeleteClick = { idsToDelete = listOf(media.mediaId) }
-//                                )
-//                            }
-//                        }
-//                    }
-//                }
+            //Upload Media Button
+            IconButton(onClick = { filePickerLauncher.launch(arrayOf("audio/*")) }) {
+                Icon(
+                    modifier = Modifier.fillMaxSize(),
+                    imageVector = Icons.Default.Add,
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = "Upload Media"
+                )
             }
         }
 
-        //Upload Media Button (FAB)
-        FloatingActionButton(
-            onClick = { filePickerLauncher.launch(arrayOf("audio/*")) },
+        if (!showOnlyStale) {
+            //Bulk Actions
+            BulkActionsBar(
+                isAnySelected = isAnySelected,
+                isAllSelected = isAllSelected,
+                onToggleAllClick = { viewModel.toggleSelectAll() },
+                onClearSelectionClick = { viewModel.clearSelection() }
+            ) {
+                IconButton(onClick = { idsToEdit = selectedIds.toList() }) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+                }
+                IconButton(onClick = { idsToAddToPlaylists = selectedIds.toList() }) {
+                    Icon(Icons.AutoMirrored.Filled.PlaylistAdd, contentDescription = "Add To Playlist")
+                }
+                IconButton(onClick = { onAddToQueueClick(selectedIds.mapNotNull { id -> mediaMap[id] }) }) {
+                    Icon(Icons.Default.AddToQueue, contentDescription = "Add Selection to Queue")
+                }
+                IconButton(onClick = { idsToDelete = selectedIds.toList() }) {
+                    Icon(Icons.Default.DeleteForever, tint = MaterialTheme.colorScheme.error, contentDescription = "Delete")
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(start = 16.dp, end = 8.dp),
+                horizontalArrangement = Arrangement.Absolute.Left,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.labelLarge,
+                    text = "The following have invalid file paths.\nFix using relink buttons or delete."
+                )
+                TextButton(
+                    onClick = { idsToDelete = allStaleMedia.map { it.mediaId } },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete ALL")
+                }
+            }
+        }
+
+        //Media List
+        LazyColumn(
+            state = listState,
             modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 4.dp, bottom = 16.dp)
+                .weight(1f)
+                .padding(top = 6.dp),
+            contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Upload Media")
+            if (!hasMedia) {
+                item {
+                    EmptyMessage(text = "You have no items uploaded. Add some using the \"+\" button at the top-right of your screen.")
+                }
+            } else {
+                val activeList = if (showOnlyStale) staleListForDisplay else mediaList
+
+                if (activeList.isEmpty()) {
+                    item {
+                        EmptyMessage(text = if (showOnlyStale) "No invalid media match your search." else "No matches found.")
+                    }
+                } else {
+                    items(
+                        items = activeList,
+                        key = { it.mediaId }
+                    ) { media ->
+                        //Show selectable list item under normal circumstances
+                        if (!media.isStaleUri) {
+                            MediaListItemSelectable(
+                                media = media,
+                                isSelected = selectedIds.contains(media.mediaId),
+                                onSelect = { viewModel.toggleSelection(media.mediaId) },
+                                constrainSelectToCheckbox = false,
+                                onMoreClick = { selectedMediaItemForMenu = media }
+                            )
+                        } else { //Show error list item when uri is stale
+                            StaleUriListItem(
+                                media = media,
+                                onRelinkClick = {
+                                    mediaIdToRelink = media.mediaId
+                                    relinkLauncher.launch(arrayOf("audio/*"))
+                                },
+                                onDeleteClick = { idsToDelete = listOf(media.mediaId) }
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 

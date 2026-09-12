@@ -1,6 +1,21 @@
 TODO:
 
-change to closed testing in gpc
+move add buttons to beside search bar(and add texts)
+make playlist list items bigger
+	item counts + total hours perhaps
+Get closed testers
+Basic screenshots for listing
+	home + mini-player bar: search query, several items selected + 30% duration elapsed with actual image
+	expanded player: Shuffle on, repeat off, 30% duration elapsed
+		another with different colors and light/dark theme, different song, duration, and shuffle/repeat
+	queue: some manual queue, one item half-swiped, repeat message shown
+	playlists: several playlists shown, some sorting type on, maybe hit ellipsis on one
+	playlist details: basic viewing mode
+	edit details: from any page, show the edit item dialog
+	settings: full settings page
+	
+change to closed testing in gpc - requires screenshots to be done
+
 longer toast messages (mainly for use by "found invalid file paths" message)
 better toggleShuffle logic (use mcm on web first, then try Ask)
 definitely move around the add buttons
@@ -43,3 +58,15 @@ Features:
  - Powered by Google's industry standard ExoPlayer, enjoy smooth and battery-efficient playback performance across a wide variety of audio formats in either the background or foreground.
  - Blends into your device's aesthetic by dynamically adapting to the system's color scheme using Material You.
 end full description
+
+
+
+
+
+
+
+
+Maybe:
+@HomeScreen.kt   @PlaylistsScreen.kt   @PlaylistDetailsScreen.kt   @HomeViewModel.kt   @PlaylistsViewModel.kt   @PlaylistDetailsViewModel.kt 
+So, I seem to have a lot of duplicated code. for example, in home screen and playlist details screen, i have a couple hundred lines of code on both screens that are essentially the same thing (sometimes a little different), handling a media list item's options (or handling a list of media items' bulk options). In turn, i have a lot of same/similar code in the respective viewmodels.There are other examples as well.
+So, I would like to ask you what the best way of handling this is? say i make another screen where media list items appear and i want the same abilities (like edit, play, add to queue, delete, remove from playlist, and all the bulk options too). It would require duplicating another couple hundred loc. I figure this is bad practice right? so, how does one alleviate this? is there a specific design pattern? I want to do this the industry standard way where the code is actually completely reusable and not duplicated anywhere if possible.

@@ -1,6 +1,7 @@
 package com.devball.jubalaudio.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -97,79 +98,81 @@ fun PlaylistsScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            //Title
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 6.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Add or Edit Playlists",
-                    style = MaterialTheme.typography.titleLarge
+    Column(modifier = Modifier.fillMaxSize()) {
+        //Title
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 6.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Add or Edit Playlists",
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+
+        //Search + Sort
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            //Search
+            SearchBar(
+                value = searchQuery,
+                placeHolderText = "Search playlists...",
+                modifier = Modifier.weight(1f),
+                onClear = { viewModel.onSearchQueryChange("") },
+                onValueChange = { viewModel.onSearchQueryChange(it) }
+            )
+
+            //Sort
+            IconButton(onClick = { showSortDialog = true }) {
+                Icon(
+                    modifier = Modifier.fillMaxSize(),
+                    imageVector = Icons.AutoMirrored.Default.Sort,
+                    contentDescription = "Sort List"
                 )
             }
 
-            //Search + Filter
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                //Search
-                SearchBar(
-                    value = searchQuery,
-                    placeHolderText = "Search playlists...",
-                    modifier = Modifier.weight(1f),
-                    onClear = { viewModel.onSearchQueryChange("") },
-                    onValueChange = { viewModel.onSearchQueryChange(it) }
+            //Create Playlist Button
+            IconButton(onClick = { creatingPlaylist = true }) {
+                Icon(
+                    modifier = Modifier.fillMaxSize(),
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Create Playlist"
                 )
-
-                //Sort
-                IconButton(onClick = { showSortDialog = true }) {
-                    Icon(Icons.AutoMirrored.Default.Sort, contentDescription = "Sort List")
-                }
-            }
-
-            //Playlist List
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(top = 6.dp),
-                contentPadding = PaddingValues(bottom = 80.dp)
-            ) {
-                if (playlistList.isNotEmpty()) {
-                    items(
-                        items = playlistList,
-                        key = { it.playlistId }
-                    ) { playlist ->
-                        PlaylistListItemStandard(
-                            playlist = playlist,
-                            modifier = Modifier.clickable {
-                                navController.navigate(Screen.PlaylistDetails.createRoute(playlist.playlistId))
-                            },
-                            onMoreClick = { selectedPlaylistForMenu = playlist }
-                        )
-                    }
-                } else {
-                    item {
-                        EmptyMessage(text = "You have no playlists made. Create one using the \"+\" button at the bottom-right of your screen.")
-                    }
-                }
             }
         }
 
-        //Create Playlist Button
-        FloatingActionButton(
-            onClick = { creatingPlaylist = true },
+        //Playlist List
+        LazyColumn(
             modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 4.dp, bottom = 16.dp)
+                .weight(1f)
+                .padding(top = 6.dp),
+            contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Create Playlist")
+            if (playlistList.isNotEmpty()) {
+                items(
+                    items = playlistList,
+                    key = { it.playlistId }
+                ) { playlist ->
+                    PlaylistListItemStandard(
+                        playlist = playlist,
+                        modifier = Modifier.combinedClickable(
+                            onClick = { navController.navigate(Screen.PlaylistDetails.createRoute(playlist.playlistId)) },
+                            onLongClick = { selectedPlaylistForMenu = playlist }
+                        ),
+                        onMoreClick = { selectedPlaylistForMenu = playlist }
+                    )
+                }
+            } else {
+                item {
+                    EmptyMessage(text = "You have no playlists made. Create one using the \"+\" button at the top-right of your screen.")
+                }
+            }
         }
     }
 

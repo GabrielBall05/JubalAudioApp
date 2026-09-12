@@ -34,6 +34,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -65,6 +68,11 @@ class MainActivity : ComponentActivity() {
 
         @Suppress("DEPRECATION")
         ComposeFoundationFlags.isNonComposedClickableEnabled = false
+
+        //FOR GOOGLE PLAY SCREENSHOTS ONLY - TODO: REMOVE FROM PRODUCTION
+        //val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        //windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        //windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
 
         setContent {
             JubalAudioTheme {

@@ -35,13 +35,16 @@ fun PlaylistListItemStandard(
             model = playlist.coverUri,
             contentDescription = "Cover Image",
             fallbackIcon = Icons.Default.LibraryMusic,
-            sizeInDp = 50.dp
+            sizeInDp = 65.dp
         )
+
+        val typography = if (playlist.description != null) MaterialTheme.typography.titleLarge
+            else MaterialTheme.typography.headlineMedium
 
         //Playlist Item Info
         InfoColumnMarquee(
             mainText = playlist.name,
-            mainTextStyle = MaterialTheme.typography.titleLarge,
+            mainTextStyle = typography,
             subText = playlist.description,
             subTextStyle = MaterialTheme.typography.bodyMedium
         )
