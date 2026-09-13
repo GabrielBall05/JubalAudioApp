@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +41,7 @@ import com.devball.jubalaudio.data.local.MediaEntity
 import com.devball.jubalaudio.data.local.PlaylistEntity
 import com.devball.jubalaudio.ui.Screen
 import com.devball.jubalaudio.ui.components.common.EmptyMessage
+import com.devball.jubalaudio.ui.components.common.ExpandableTopBar
 import com.devball.jubalaudio.ui.components.common.SearchBar
 import com.devball.jubalaudio.ui.components.dialogs.ConfirmationDialog
 import com.devball.jubalaudio.ui.components.dialogs.LoadingDialog
@@ -52,6 +54,7 @@ import com.devball.jubalaudio.ui.components.optionsheets.PlaylistOptionsSheet
 import com.devball.jubalaudio.ui.viewmodels.PlaylistsViewModel
 import com.devball.jubalaudio.util.ObserveUiEvents
 import com.devball.jubalaudio.util.PlaylistsSortOrder
+import kotlinx.coroutines.channels.ticker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,40 +101,18 @@ fun PlaylistsScreen(
         }
     }
 
+    //Search/Sort + Create Playlist
     Column(modifier = Modifier.fillMaxSize()) {
-        //Title
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 6.dp),
-            horizontalArrangement = Arrangement.Center
+        ExpandableTopBar(
+            title = "All Playlists",
+            titlePadding = PaddingValues(start = 12.dp),
+            searchQuery = searchQuery,
+            onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+            placeholderText = "Search playlists..."
         ) {
-            Text(
-                text = "Add or Edit Playlists",
-                style = MaterialTheme.typography.titleLarge
-            )
-        }
-
-        //Search + Sort
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            //Search
-            SearchBar(
-                value = searchQuery,
-                placeHolderText = "Search playlists...",
-                modifier = Modifier.weight(1f),
-                onClear = { viewModel.onSearchQueryChange("") },
-                onValueChange = { viewModel.onSearchQueryChange(it) }
-            )
-
             //Sort
             IconButton(onClick = { showSortDialog = true }) {
                 Icon(
-                    modifier = Modifier.fillMaxSize(),
                     imageVector = Icons.AutoMirrored.Default.Sort,
                     contentDescription = "Sort List"
                 )
@@ -140,12 +121,17 @@ fun PlaylistsScreen(
             //Create Playlist Button
             IconButton(onClick = { creatingPlaylist = true }) {
                 Icon(
-                    modifier = Modifier.fillMaxSize(),
                     imageVector = Icons.Default.Add,
                     contentDescription = "Create Playlist"
                 )
             }
         }
+
+        HorizontalDivider(
+            modifier = Modifier.padding(horizontal = 8.dp),
+            thickness = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant
+        )
 
         //Playlist List
         LazyColumn(

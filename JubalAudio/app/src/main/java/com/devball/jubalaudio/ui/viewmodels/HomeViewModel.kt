@@ -1,6 +1,7 @@
 package com.devball.jubalaudio.ui.viewmodels
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.lifecycle.viewModelScope
 import com.devball.jubalaudio.data.local.MediaEntity
 import com.devball.jubalaudio.data.local.PlaylistEntity
@@ -104,8 +105,10 @@ class HomeViewModel @Inject constructor(
         //Validate URI integrity and notify user if applicable
         viewModelScope.launch {
             val numStale = mediaRepository.validateMediaUris()
-            if (numStale > 0) sendUiEvent( //TODO: LONGER TOAST MESSAGE DURATION
-                UiEvent.ShowToast("$numStale media have invalid file paths. View in Home screen via filter option.")
+            if (numStale > 0) sendUiEvent(event = UiEvent.ShowToast(
+                    message = "$numStale media have invalid file paths. View in Home screen via filter option.",
+                    length = Toast.LENGTH_LONG
+                )
             )
         }
     }
@@ -154,8 +157,13 @@ class HomeViewModel @Inject constructor(
     }
 
     fun importMedia(uriList: List<Uri>) = launchWithLoading {
-        mediaRepository.importMedia(uriList)
-        sendUiEvent(UiEvent.ShowToast("Added ${uriList.size} item${if (uriList.size > 1) "s" else ""} to library" ))
+        try {
+            val newIds = mediaRepository.importMedia(uriList)
+            sendUiEvent(UiEvent.ShowToast("Added ${newIds.size} item${if (newIds.size > 1) "s" else ""} to library" ))
+            _selectedMediaIds.value += newIds
+        } catch (e: Exception) {
+            sendUiEvent(UiEvent.ShowToast("Failed to import media"))
+        }
     }
 
     fun relinkMedia(mediaId: Int, newUri: Uri) = launchWithoutLoading {

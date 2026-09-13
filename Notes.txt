@@ -1,38 +1,20 @@
 TODO:
 
-move add buttons to beside search bar(and add texts)
-make playlist list items bigger
-	item counts + total hours perhaps
 Get closed testers
-Basic screenshots for listing
-	home + mini-player bar: search query, several items selected + 30% duration elapsed with actual image
-	expanded player: Shuffle on, repeat off, 30% duration elapsed
-		another with different colors and light/dark theme, different song, duration, and shuffle/repeat
-	queue: some manual queue, one item half-swiped, repeat message shown
-	playlists: several playlists shown, some sorting type on, maybe hit ellipsis on one
-	playlist details: basic viewing mode
-	edit details: from any page, show the edit item dialog
-	settings: full settings page
-	
-change to closed testing in gpc - requires screenshots to be done
-
-longer toast messages (mainly for use by "found invalid file paths" message)
+before starting closed test, use newest build
 better toggleShuffle logic (use mcm on web first, then try Ask)
-definitely move around the add buttons
-select newly imported media
 
-reordering in a playlist is a little difficult if youre at the top or bottom of the list
 log statements everywhere (and improve its tag/message)
 horizontal orientation layouts - currently locked to portrait
 app icon and name: Jubal Audio Player & Organizer
 swipe image in explanded player screen to go next/prev
 when copying/storing images, maybe try to make sure there are no duplicated or orphaned images to save space on phone
-move the add media button to bottom nav bar. maybe do snackbar instead of toasts because it won't be a problem anymore
+snackbars instead of toasts
 thoroughly comment code and just make it look better
 better file organization
 maybe: drag for reordering
 maybe: widget
-maybe: audio equalization setting
+maybe: audio equalizer
 maybe: gapless playback by finding empty noise and using .setClippingConfiguration in MediaItem builder
 
 future:

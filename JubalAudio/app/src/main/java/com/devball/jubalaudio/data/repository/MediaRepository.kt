@@ -54,20 +54,24 @@ class MediaRepository @Inject constructor(
         mediaDao.deleteMediaList(mediaIds)
     }
 
-    suspend fun importMedia(uriList: List<Uri>) = withContext(Dispatchers.IO) {
+    suspend fun importMedia(uriList: List<Uri>): List<Int> = withContext(Dispatchers.IO) {
         val entities = uriList.mapNotNull { uri ->
             try {
                 //Ensures persistent permission
                 context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 //Extract metadata - Default MediaEntity is returned if extraction fails
-                //If only specific individual metadata fields are empty, default values are placed
                 getMediaMetadata(context, uri)
             } catch (e: Exception) {
                 Log.e("OfflineAudioSuite", "MediaInteractor: Failed to get permission for $uri", e)
                 null //Skip this one
             }
         }
-        if (entities.isNotEmpty()) mediaDao.insertMediaList(entities) //Perform db insertions
+
+        //Perform db insertions and return id list
+        if (entities.isNotEmpty()) {
+            mediaDao.insertMediaList(entities) //Perform db insertions
+                .filter { it != -1L }.map { it.toInt() } //Filter out ignored conflicts then map to int
+        } else emptyList() //Fallback empty list
     }
 
     suspend fun validateMediaUris(): Int = withContext(Dispatchers.IO) {

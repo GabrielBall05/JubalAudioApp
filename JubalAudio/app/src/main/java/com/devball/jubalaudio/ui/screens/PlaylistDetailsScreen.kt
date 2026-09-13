@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,6 +53,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -82,6 +84,7 @@ import com.devball.jubalaudio.ui.components.optionsheets.PlaylistOptionsSheet
 import com.devball.jubalaudio.ui.viewmodels.PlaylistDetailsViewModel
 import com.devball.jubalaudio.util.ObserveUiEvents
 import com.devball.jubalaudio.util.SwipeDismissable
+import kotlinx.coroutines.launch
 
 private enum class TopBarState {
     Reordering, Selecting, Standard
@@ -223,6 +226,10 @@ fun PlaylistDetailsScreen(
 
             //Top Bar
             AnimatedContent(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .height(48.dp),
                 targetState = topBarState,
                 label = "TopBarStateTransition",
                 transitionSpec = {
@@ -234,9 +241,7 @@ fun PlaylistDetailsScreen(
                     //Reordering = Show Done Button
                     TopBarState.Reordering -> {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(all = 12.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -245,14 +250,14 @@ fun PlaylistDetailsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 32.dp)
-                            ) { Text("Done") }
+                            ) { Text(text = "Done", style = MaterialTheme.typography.titleMedium) }
                         }
                     }
 
                     //Selecting = Show Bulk Actions Bar
                     TopBarState.Selecting -> {
                         BulkActionsBar(
-                            modifier = Modifier.padding(vertical = 12.dp),
+                            modifier = Modifier.fillMaxSize(),
                             isAnySelected = isAnySelected,
                             isAllSelected = isAllSelected,
                             onToggleAllClick = { viewModel.toggleSelectAll() },
@@ -278,17 +283,14 @@ fun PlaylistDetailsScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 6.dp, vertical = 8.dp)
-                                .height(IntrinsicSize.Min),
+                                .padding(horizontal = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             //Search Bar
                             SearchBar(
                                 value = searchQuery,
                                 placeHolderText = "Search in playlist",
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
+                                modifier = Modifier.weight(1f),
                                 onClear = { viewModel.onSearchQueryChange("") },
                                 onValueChange = { viewModel.onSearchQueryChange(it) }
                             )
@@ -339,6 +341,7 @@ fun PlaylistDetailsScreen(
                         key = { _, media -> media.mediaId }
                     ) { index, media ->
                         MediaListItemReorderable(
+                            modifier = Modifier.animateItem(),
                             media = media,
                             isFirst = index == 0,
                             isLast = index == fullMediaList.size - 1,

@@ -20,8 +20,8 @@ import com.devball.jubalaudio.ui.components.common.SurfacedImage
 
 @Composable
 fun MediaListItemReorderable(
-    media: MediaEntity,
     modifier: Modifier = Modifier,
+    media: MediaEntity,
     isFirst: Boolean,
     isLast: Boolean,
     onMoveUp: () -> Unit,

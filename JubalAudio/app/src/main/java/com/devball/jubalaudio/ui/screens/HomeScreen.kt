@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -56,6 +58,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.devball.jubalaudio.data.local.MediaEntity
 import com.devball.jubalaudio.ui.components.common.BulkActionsBar
 import com.devball.jubalaudio.ui.components.common.EmptyMessage
+import com.devball.jubalaudio.ui.components.common.ExpandableTopBar
 import com.devball.jubalaudio.ui.components.common.SearchBar
 import com.devball.jubalaudio.ui.components.dialogs.ConfirmationDialog
 import com.devball.jubalaudio.ui.components.dialogs.EditMediaBulkDialog
@@ -141,35 +144,14 @@ fun HomeScreen(
 
     //Screen UI
     Column(modifier = Modifier.fillMaxSize()) {
-        //Page Title
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 6.dp),
-            horizontalArrangement = Arrangement.Center
+        //Search/Title + Other Buttons
+        ExpandableTopBar(
+            title = "Library",
+            titlePadding = PaddingValues(start = 12.dp),
+            searchQuery = searchQuery,
+            onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+            placeholderText = "Search all media..."
         ) {
-            Text(
-                text = "Add or Edit Media",
-                style = MaterialTheme.typography.titleLarge
-            )
-        }
-
-        //Search + Sort
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            //Search Bar
-            SearchBar(
-                value = searchQuery,
-                placeHolderText = "Search all media...",
-                modifier = Modifier.weight(1f),
-                onClear = { viewModel.onSearchQueryChange("") },
-                onValueChange = { viewModel.onSearchQueryChange(it) }
-            )
-
             //Show Stale Media Button
             if (allStaleMedia.isNotEmpty()) {
                 Spacer(modifier = Modifier.width(6.dp))
@@ -180,7 +162,6 @@ fun HomeScreen(
                     onClick = { showOnlyStale = !showOnlyStale }
                 ) {
                     Icon(
-                        modifier = Modifier.fillMaxSize(),
                         imageVector = Icons.Default.Error,
                         tint = MaterialTheme.colorScheme.error,
                         contentDescription = "Show Invalid Media"
@@ -191,7 +172,6 @@ fun HomeScreen(
             //Sort
             IconButton(onClick = { showSortDialog = true }) {
                 Icon(
-                    modifier = Modifier.fillMaxSize(),
                     imageVector = Icons.AutoMirrored.Default.Sort,
                     contentDescription = "Sort List"
                 )
@@ -200,7 +180,6 @@ fun HomeScreen(
             //Upload Media Button
             IconButton(onClick = { filePickerLauncher.launch(arrayOf("audio/*")) }) {
                 Icon(
-                    modifier = Modifier.fillMaxSize(),
                     imageVector = Icons.Default.Add,
                     tint = MaterialTheme.colorScheme.primary,
                     contentDescription = "Upload Media"

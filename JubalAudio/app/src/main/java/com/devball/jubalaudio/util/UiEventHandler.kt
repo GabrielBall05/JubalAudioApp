@@ -27,7 +27,7 @@ fun ObserveUiEvents(
                 when (event) {
                     is UiEvent.ShowToast -> {
                         currentToast?.cancel()
-                        currentToast = Toast.makeText(context, event.message, Toast.LENGTH_SHORT)
+                        currentToast = Toast.makeText(context, event.message, event.length)
 
                         //Maybe later: Change global position here
 

@@ -121,6 +121,7 @@ fun QueueScreen(
                 key = { _, item -> "manual_${item.mediaId}_${item.hashCode()}" }
             ) { index, item ->
                 SwipeDismissable(
+                    modifier = Modifier.animateItem(),
                     onDismiss = { onRemoveItemAtIndex(index, true) },
                     background = { SwipeDismissableBackground(
                         imageVector = Icons.Default.DeleteOutline,
@@ -159,6 +160,7 @@ fun QueueScreen(
                 key = { _, item -> "upnext_${item.mediaId}_${item.hashCode()}" }
             ) { index, item ->
                 SwipeDismissable(
+                    modifier = Modifier.animateItem(),
                     onDismiss = { onRemoveItemAtIndex(index, false) },
                     background = { SwipeDismissableBackground(
                         imageVector = Icons.Default.DeleteOutline,
