@@ -2,16 +2,15 @@ TODO:
 
 Get closed testers
 before starting closed test, use newest build
-better toggleShuffle logic (use mcm on web first, then try Ask)
 
 log statements everywhere (and improve its tag/message)
 horizontal orientation layouts - currently locked to portrait
-app icon and name: Jubal Audio Player & Organizer
 swipe image in explanded player screen to go next/prev
 when copying/storing images, maybe try to make sure there are no duplicated or orphaned images to save space on phone
 snackbars instead of toasts
 thoroughly comment code and just make it look better
 better file organization
+better app icon
 maybe: drag for reordering
 maybe: widget
 maybe: audio equalizer

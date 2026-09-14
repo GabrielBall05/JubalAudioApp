@@ -61,30 +61,27 @@ fun ExpandableTopBar(
             label = "SearchTransition"
         ) { searching ->
             if (searching) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = {
-                        isSearching = false
-                        onSearchQueryChange("") //Clear search on collapse
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Collapse Search"
-                        )
+                SearchBar(
+                    value = searchQuery,
+                    placeHolderText = placeholderText,
+                    modifier = Modifier.weight(1f),
+                    onClear = {
+                        if (searchQuery.isEmpty()) isSearching = false
+                        else onSearchQueryChange("")
+                    },
+                    onValueChange = onSearchQueryChange,
+                    leadingIcon = {
+                        IconButton(onClick = {
+                            isSearching = false
+                            onSearchQueryChange("") //Clear search on collapse
+                        }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Collapse Search"
+                            )
+                        }
                     }
-                    SearchBar(
-                        value = searchQuery,
-                        placeHolderText = placeholderText,
-                        modifier = Modifier.weight(1f),
-                        onClear = {
-                            if (searchQuery.isEmpty()) isSearching = false
-                            else onSearchQueryChange("")
-                        },
-                        onValueChange = onSearchQueryChange
-                    )
-                }
+                )
             } else {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

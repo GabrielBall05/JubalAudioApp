@@ -31,7 +31,14 @@ fun SearchBar(
     placeHolderText: String,
     modifier: Modifier = Modifier,
     onClear: () -> Unit,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    leadingIcon: @Composable () -> Unit = {
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+    }
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -59,13 +66,7 @@ fun SearchBar(
                         style = MaterialTheme.typography.bodyLarge
                     )
                 },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                },
+                leadingIcon = leadingIcon,
                 trailingIcon = {
                     if (value.isNotEmpty()) {
                         IconButton(onClick = onClear) {
