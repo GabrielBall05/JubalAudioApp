@@ -91,19 +91,11 @@ class MediaControllerManager @Inject constructor(
         _duration.value = player.duration.coerceAtLeast(0L)
     }
 
-    //Seek to next media item
-    fun seekToNext() {
-        val player = controller ?: return
-        player.seekToNext()
-        player.play()
-    }
+    //Seek to next media item - custom logic handled in ForwardingPlayer
+    fun seekToNext() = controller?.seekToNext()
 
-    //Seek to previous media item
-    fun seekToPrevious() {
-        val player = controller ?: return
-        player.seekToPrevious()
-        player.play()
-    }
+    //Seek to previous media item - custom logic handled in ForwardingPlayer
+    fun seekToPrevious() = controller?.seekToPrevious()
 
     //Seeking within current media item
     fun seekTo(positionMs: Long) {
@@ -114,7 +106,7 @@ class MediaControllerManager @Inject constructor(
     //Toggle playing state
     fun togglePlayPause() {
         val player = controller ?: return
-        if (player.isPlaying) player.pause()else player.play()
+        if (player.isPlaying) player.pause() else player.play()
     }
 
     //Toggle repeating current
@@ -179,8 +171,6 @@ class MediaControllerManager @Inject constructor(
     fun playPlaylist(mediaItems: List<MediaItem>, playlistId: Int?, startItemIndex: Int, startShuffled: Boolean) {
         if (mediaItems.isEmpty()) return
         val player = controller ?: return
-
-        //TODO: Maybe preserve manual queue where applicable
 
         //Make copy of full playlist
         originalPlaylist = mediaItems
@@ -633,7 +623,7 @@ class MediaControllerManager @Inject constructor(
         _currentPosition.value = 0L
         _duration.value = 0L
         _isPlaying.value = false
-        _isShuffling.value = false //TODO: Maybe keep shuffle setting
+        _isShuffling.value = false //TODO: Maybe keep shuffle setting (by simply removing this line)
         _repeatingCurrent.value = false
         _manualQueueState.value = emptyList()
         _upNextState.value = emptyList()

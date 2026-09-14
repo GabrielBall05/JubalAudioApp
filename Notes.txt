@@ -27,7 +27,6 @@ future:
 short description:
 Organize, edit, and play your local audio files via seamless playback queue.
 
-
 full description:
 Designed for users who prefer owning their media rather than renting it through subscription services, this app brings a simple user interface and feature-rich queue management of modern music platforms directly to your personal collection of audio files.
 
