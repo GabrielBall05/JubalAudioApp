@@ -6,6 +6,7 @@ import com.devball.jubalaudio.data.local.MediaEntity
 import com.devball.jubalaudio.data.local.PlaylistDao
 import com.devball.jubalaudio.data.local.PlaylistEntity
 import com.devball.jubalaudio.data.local.PlaylistMediaItem
+import com.devball.jubalaudio.data.local.PlaylistWithCount
 import com.devball.jubalaudio.util.copyUriToInternalStorage
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -20,11 +21,13 @@ class PlaylistRepository @Inject constructor(
     private val playlistDao: PlaylistDao,
     @param:ApplicationContext private val context: Context
 ) {
-    val allPlaylists: Flow<List<PlaylistEntity>> = playlistDao.getAllPlaylists()
-
+    //val allPlaylists: Flow<List<PlaylistEntity>> = playlistDao.getAllPlaylists() //TODO: Uncomment if needed
+    val allPlaylistsWithCounts: Flow<List<PlaylistWithCount>> = playlistDao.getAllPlaylistsWithCounts()
 
     //DB Actions
     fun getPlaylistById(id: Int): Flow<PlaylistEntity?> = playlistDao.getPlaylistById(id)
+
+    fun getPlaylistWithCountById(id: Int): Flow<PlaylistWithCount?> = playlistDao.getPlaylistWithCountById(id)
 
     suspend fun fetchPlaylistMediaList(id: Int): List<MediaEntity> = withContext(Dispatchers.IO) {
         playlistDao.getMediaInPlaylist(id).first()

@@ -143,15 +143,16 @@ fun PlaylistsScreen(
             if (playlistList.isNotEmpty()) {
                 items(
                     items = playlistList,
-                    key = { it.playlistId }
-                ) { playlist ->
+                    key = { it.playlist.playlistId }
+                ) { playlistWithCount ->
                     PlaylistListItemStandard(
-                        playlist = playlist,
+                        playlist = playlistWithCount.playlist,
+                        countText = "${playlistWithCount.itemCount} items",
                         modifier = Modifier.combinedClickable(
-                            onClick = { navController.navigate(Screen.PlaylistDetails.createRoute(playlist.playlistId)) },
-                            onLongClick = { selectedPlaylistForMenu = playlist }
+                            onClick = { navController.navigate(Screen.PlaylistDetails.createRoute(playlistWithCount.playlist.playlistId)) },
+                            onLongClick = { selectedPlaylistForMenu = playlistWithCount.playlist }
                         ),
-                        onMoreClick = { selectedPlaylistForMenu = playlist }
+                        onMoreClick = { selectedPlaylistForMenu = playlistWithCount.playlist }
                     )
                 }
             } else {

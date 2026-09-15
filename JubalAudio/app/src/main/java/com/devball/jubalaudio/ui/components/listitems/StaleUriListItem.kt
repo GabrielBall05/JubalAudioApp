@@ -1,5 +1,6 @@
 package com.devball.jubalaudio.ui.components.listitems
 
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.devball.jubalaudio.data.local.MediaEntity
 import com.devball.jubalaudio.ui.components.common.IconPulseEffect
 import com.devball.jubalaudio.ui.components.common.IconWithTooltip
-import com.devball.jubalaudio.ui.components.common.InfoColumnMarquee
+import com.devball.jubalaudio.ui.components.common.ItemInfoColumn
 import com.devball.jubalaudio.ui.components.common.SurfacedImage
 
 @Composable
@@ -50,10 +52,21 @@ fun StaleUriListItem(
         )
 
         //Media Item Info
-        InfoColumnMarquee(
-            mainText = media.title,
-            subText = media.creator,
-            textColor = MaterialTheme.colorScheme.error
+        ItemInfoColumn(
+            line1 = { Text(
+                text = media.title,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
+                color = MaterialTheme.colorScheme.error
+            ) },
+            line2 = { Text(
+                text = media.creator,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
+                color = MaterialTheme.colorScheme.error
+            ) }
         )
 
         //Relink Button

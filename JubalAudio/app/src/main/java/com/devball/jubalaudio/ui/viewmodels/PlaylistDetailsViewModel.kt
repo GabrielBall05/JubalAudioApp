@@ -32,11 +32,7 @@ class PlaylistDetailsViewModel @Inject constructor(
     private val playlistId: Int = checkNotNull(savedStateHandle["id"])
 
     //Get the actual playlist from db
-    val playlist = playlistRepository.getPlaylistById(playlistId)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    //Get the number of media items in this playlist
-    val itemCount = playlistRepository.getPlaylistItemCount(playlistId)
+    val playlistWithCount = playlistRepository.getPlaylistWithCountById(playlistId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     //Get all media items in this playlist

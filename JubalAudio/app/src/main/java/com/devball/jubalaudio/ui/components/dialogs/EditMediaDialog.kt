@@ -43,7 +43,7 @@ fun EditMediaDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Item") },
+        title = { Text("Edit Display Details") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 //Edit title input

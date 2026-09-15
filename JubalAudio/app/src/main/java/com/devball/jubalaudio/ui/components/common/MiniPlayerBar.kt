@@ -5,6 +5,7 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.devball.jubalaudio.ui.viewmodels.MainViewModel
@@ -42,8 +44,8 @@ fun MiniPlayerBar(
     //If nothing is loaded in the player (no media items), don't show the bar at all
     if (currentMedia == null) return
 
+    //Calculate progress
     val progress = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f
-
 
     Box(
         modifier = Modifier
@@ -66,26 +68,21 @@ fun MiniPlayerBar(
             )
 
             //Title & Creator
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 12.dp)
-            ) {
-                //Title
-                Text(
+            ItemInfoColumn(
+                paddingValues = PaddingValues(start = 8.dp),
+                line1 = { Text(
                     text = currentMedia?.mediaMetadata?.title?.toString() ?: "Unknown Title",
                     maxLines = 1,
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE)
-                )
-                //Creator
-                Text(
+                    overflow = TextOverflow.Ellipsis
+                ) },
+                line2 = { Text(
                     text = currentMedia?.mediaMetadata?.artist?.toString() ?: "Unknown Creator",
                     maxLines = 1,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE)
-                )
-            }
+                    overflow = TextOverflow.Ellipsis
+                ) }
+            )
 
             //Controls
             IconButton(onClick = { viewModel.seekToPrevious() }) {

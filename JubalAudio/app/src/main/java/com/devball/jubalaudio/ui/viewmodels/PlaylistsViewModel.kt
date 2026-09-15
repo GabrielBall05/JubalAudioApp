@@ -32,7 +32,7 @@ class PlaylistsViewModel @Inject constructor(
     val sortOrder = _sortOrder.asStateFlow()
 
     //Get all playlist entities from the db
-    private val _allPlaylists = playlistRepository.allPlaylists
+    private val _allPlaylists = playlistRepository.allPlaylistsWithCounts
 
     //Filter full list by combining with search query
     val filteredPlaylists = combine(_allPlaylists, _searchQuery, _sortOrder) { playlists, query, sort ->
@@ -41,22 +41,18 @@ class PlaylistsViewModel @Inject constructor(
             playlists
         else { //Only show list where name or description (if exists) contains query (case insensitive)
             playlists.filter { item ->
-                item.name.contains(query, ignoreCase = true) ||
-                (item.description?.contains(query, ignoreCase = true) ?: false)
+                item.playlist.name.contains(query, ignoreCase = true) ||
+                (item.playlist.description?.contains(query, ignoreCase = true) ?: false)
             }
         }
         //Then sort
         when (sort) {
-            PlaylistsSortOrder.NAME_ASC -> filtered.sortedBy { it.name.lowercase() }
-            PlaylistsSortOrder.NAME_DESC -> filtered.sortedByDescending { it.name.lowercase() }
-            PlaylistsSortOrder.DATE_CREATED_MOST_RECENT -> filtered.sortedByDescending { it.dateCreated }
-            PlaylistsSortOrder.DATE_CREATED_LEAST_RECENT -> filtered.sortedBy { it.dateCreated }
+            PlaylistsSortOrder.NAME_ASC -> filtered.sortedBy { it.playlist.name.lowercase() }
+            PlaylistsSortOrder.NAME_DESC -> filtered.sortedByDescending { it.playlist.name.lowercase() }
+            PlaylistsSortOrder.DATE_CREATED_MOST_RECENT -> filtered.sortedByDescending { it.playlist.dateCreated }
+            PlaylistsSortOrder.DATE_CREATED_LEAST_RECENT -> filtered.sortedBy { it.playlist.dateCreated }
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    }.stateIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = emptyList())
 
     init {
         viewModelScope.launch {

@@ -104,12 +104,7 @@ class HomeViewModel @Inject constructor(
 
         //Validate URI integrity and notify user if applicable
         viewModelScope.launch {
-            val numStale = mediaRepository.validateMediaUris()
-            if (numStale > 0) sendUiEvent(event = UiEvent.ShowToast(
-                    message = "$numStale media have invalid file paths. View in Home screen via filter option.",
-                    length = Toast.LENGTH_LONG
-                )
-            )
+            scanUris()
         }
     }
 
@@ -205,5 +200,15 @@ class HomeViewModel @Inject constructor(
         playlistRepository.insertPlaylist(playlist) //Perform db insert
         if (mediaIdsContext.isNotEmpty()) refreshAvailablePlaylists(mediaIdsContext)
         sendUiEvent(UiEvent.ShowToast("Playlist created"))
+    }
+
+    suspend fun scanUris() {
+        val numStale = mediaRepository.validateMediaUris()
+        if (numStale > 0) sendUiEvent(
+            event = UiEvent.ShowToast(
+                message = "$numStale media have invalid file paths. View in Home screen via filter option.",
+                length = Toast.LENGTH_LONG
+            )
+        )
     }
 }

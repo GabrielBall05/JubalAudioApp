@@ -18,9 +18,31 @@ interface PlaylistDao {
     @Query("SELECT * FROM ${PlaylistEntity.TABLE_NAME} WHERE playlistId = :id")
     fun getPlaylistById(id: Int): Flow<PlaylistEntity?>
 
+    //Get playlist by id as well as its item count
+    @Query("""
+        SELECT P.*, COUNT(PMI.mediaId) AS itemCount
+        FROM ${PlaylistEntity.TABLE_NAME} AS P
+        LEFT JOIN ${PlaylistMediaItem.TABLE_NAME} AS PMI 
+            ON P.playlistId = PMI.playlistId
+        WHERE P.playlistId = :id
+        GROUP BY P.playlistId
+    """)
+    fun getPlaylistWithCountById(id: Int): Flow<PlaylistWithCount?>
+
     //READ - Get all playlists
     @Query("SELECT * FROM ${PlaylistEntity.TABLE_NAME} ORDER BY dateCreated DESC")
     fun getAllPlaylists(): Flow<List<PlaylistEntity>>
+
+    //Get all playlists as well as their item counts
+    @Query("""
+        SELECT P.*, Count(PMI.mediaId) AS itemCount
+        FROM ${PlaylistEntity.TABLE_NAME} AS P
+        LEFT JOIN ${PlaylistMediaItem.TABLE_NAME} AS PMI
+            ON P.playlistId = PMI.playlistId
+        GROUP BY P.playlistId
+        ORDER BY P.dateCreated DESC
+    """)
+    fun getAllPlaylistsWithCounts(): Flow<List<PlaylistWithCount>>
 
     //UPDATE playlist
     @Update

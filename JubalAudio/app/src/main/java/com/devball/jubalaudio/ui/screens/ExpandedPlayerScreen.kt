@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -52,6 +53,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.devball.jubalaudio.ui.components.common.ItemInfoColumn
 import com.devball.jubalaudio.ui.components.common.SurfacedImage
 import com.devball.jubalaudio.ui.components.dialogs.ConfirmationDialog
 import com.devball.jubalaudio.ui.components.dialogs.PlaylistFormDialog
@@ -139,7 +141,7 @@ fun ExpandedPlayerScreen(
                     )
                 }
 
-                //Title
+                //Current Playlist Name
                 Text(
                     modifier = Modifier.weight(1f),
                     text = currentPlaylist?.name ?: "Ad Hoc",
@@ -178,26 +180,21 @@ fun ExpandedPlayerScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 6.dp)
-                    ) {
-                        //Title
-                        Text(
+                    ItemInfoColumn(
+                        paddingValues = PaddingValues(start = 6.dp),
+                        line1 = { Text(
                             text = currentMediaItem?.mediaMetadata?.title?.toString() ?: "Unknown Title",
                             style = MaterialTheme.typography.titleLarge,
                             maxLines = 1,
                             modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE)
-                        )
-                        //Creator
-                        Text(
+                        ) },
+                        line2 = { Text(
                             text = currentMediaItem?.mediaMetadata?.artist?.toString() ?: "Unknown Creator",
                             style = MaterialTheme.typography.bodyLarge,
                             maxLines = 1,
                             modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE)
-                        )
-                    }
+                        ) }
+                    )
 
                     //Repeat Button
                     IconButton(

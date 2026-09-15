@@ -57,7 +57,7 @@ fun EditMediaBulkDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editing $itemCount items") },
+        title = { Text("Editing $itemCount Items") },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(text = "Fields are prefilled only if the selected items have it in common. " +

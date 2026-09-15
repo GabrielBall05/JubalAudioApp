@@ -3,9 +3,11 @@ TODO:
 Get closed testers
 before starting closed test, use newest build
 
+swipe image in explanded player screen to go next/prev
+	override repeatingCurrent if need be
+
 log statements everywhere (and improve its tag/message)
 horizontal orientation layouts - currently locked to portrait
-swipe image in explanded player screen to go next/prev
 when copying/storing images, maybe try to make sure there are no duplicated or orphaned images to save space on phone
 snackbars instead of toasts
 thoroughly comment code and just make it look better

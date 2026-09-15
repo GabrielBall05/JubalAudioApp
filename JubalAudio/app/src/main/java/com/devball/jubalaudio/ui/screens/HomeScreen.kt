@@ -74,6 +74,7 @@ import com.devball.jubalaudio.ui.components.optionsheets.MediaOptionsSheetConten
 import com.devball.jubalaudio.ui.viewmodels.HomeViewModel
 import com.devball.jubalaudio.util.MediaSortOrder
 import com.devball.jubalaudio.util.ObserveUiEvents
+import com.devball.jubalaudio.util.PullToRefresh
 import com.devball.jubalaudio.util.indicatorBorder
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -233,47 +234,49 @@ fun HomeScreen(
         }
 
         //Media List
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .weight(1f)
-                .padding(top = 6.dp),
-            contentPadding = PaddingValues(bottom = 80.dp)
-        ) {
-            if (!hasMedia) {
-                item {
-                    EmptyMessage(text = "You have no items uploaded. Add some using the \"+\" button at the top-right of your screen.")
-                }
-            } else {
-                val activeList = if (showOnlyStale) staleListForDisplay else mediaList
-
-                if (activeList.isEmpty()) {
+        PullToRefresh(onRefresh = { viewModel.scanUris() }) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 6.dp),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                if (!hasMedia) {
                     item {
-                        EmptyMessage(text = if (showOnlyStale) "No invalid media match your search." else "No matches found.")
+                        EmptyMessage(text = "You have no items uploaded. Add some using the \"+\" button at the top-right of your screen.")
                     }
                 } else {
-                    items(
-                        items = activeList,
-                        key = { it.mediaId }
-                    ) { media ->
-                        //Show selectable list item under normal circumstances
-                        if (!media.isStaleUri) {
-                            MediaListItemSelectable(
-                                media = media,
-                                isSelected = selectedIds.contains(media.mediaId),
-                                onSelect = { viewModel.toggleSelection(media.mediaId) },
-                                constrainSelectToCheckbox = false,
-                                onMoreClick = { selectedMediaItemForMenu = media }
-                            )
-                        } else { //Show error list item when uri is stale
-                            StaleUriListItem(
-                                media = media,
-                                onRelinkClick = {
-                                    mediaIdToRelink = media.mediaId
-                                    relinkLauncher.launch(arrayOf("audio/*"))
-                                },
-                                onDeleteClick = { idsToDelete = listOf(media.mediaId) }
-                            )
+                    val activeList = if (showOnlyStale) staleListForDisplay else mediaList
+
+                    if (activeList.isEmpty()) {
+                        item {
+                            EmptyMessage(text = if (showOnlyStale) "No invalid media match your search." else "No matches found.")
+                        }
+                    } else {
+                        items(
+                            items = activeList,
+                            key = { it.mediaId }
+                        ) { media ->
+                            //Show selectable list item under normal circumstances
+                            if (!media.isStaleUri) {
+                                MediaListItemSelectable(
+                                    media = media,
+                                    isSelected = selectedIds.contains(media.mediaId),
+                                    onSelect = { viewModel.toggleSelection(media.mediaId) },
+                                    constrainSelectToCheckbox = false,
+                                    onMoreClick = { selectedMediaItemForMenu = media }
+                                )
+                            } else { //Show error list item when uri is stale
+                                StaleUriListItem(
+                                    media = media,
+                                    onRelinkClick = {
+                                        mediaIdToRelink = media.mediaId
+                                        relinkLauncher.launch(arrayOf("audio/*"))
+                                    },
+                                    onDeleteClick = { idsToDelete = listOf(media.mediaId) }
+                                )
+                            }
                         }
                     }
                 }

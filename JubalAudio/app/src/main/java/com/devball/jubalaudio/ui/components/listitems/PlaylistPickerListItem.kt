@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.devball.jubalaudio.data.local.PlaylistEntity
-import com.devball.jubalaudio.ui.components.common.InfoColumnMarquee
+import com.devball.jubalaudio.ui.components.common.ItemInfoColumn
 import com.devball.jubalaudio.ui.components.common.SelectionIcon
 import com.devball.jubalaudio.ui.components.common.SurfacedImage
 
@@ -37,9 +39,13 @@ fun PlaylistPickerListItem(
         )
 
         //Playlist Name
-        InfoColumnMarquee(
-            mainText = playlist.name,
-            mainTextStyle = MaterialTheme.typography.titleLarge
+        ItemInfoColumn(
+            line1 = { Text(
+                    text = playlist.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+            ) }
         )
 
         //Checkbox

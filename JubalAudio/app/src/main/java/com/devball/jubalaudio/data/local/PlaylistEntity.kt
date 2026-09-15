@@ -1,5 +1,6 @@
 package com.devball.jubalaudio.data.local
 
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -16,3 +17,8 @@ data class PlaylistEntity(
         const val TABLE_NAME = "playlists"
     }
 }
+
+data class PlaylistWithCount(
+    @Embedded val playlist: PlaylistEntity,
+    val itemCount: Int
+)
