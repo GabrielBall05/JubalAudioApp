@@ -33,7 +33,7 @@ fun SurfacedImage(
     sizeInDp: Dp = 40.dp,
     radius: Dp = sizeInDp / 10f
 ) {
-    //Common painter for error + loading image, customized by tint (defaulted to surfaceTint from MaterialTheme)
+    //Common painter for error + loading image, customized by tint
     val fallbackPainter = rememberTintedVectorPainter(
         image = fallbackIcon,
         tint = fallbackIconTint

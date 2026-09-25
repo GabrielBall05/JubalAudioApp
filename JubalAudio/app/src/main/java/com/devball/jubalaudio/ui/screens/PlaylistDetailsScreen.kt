@@ -118,7 +118,7 @@ fun PlaylistDetailsScreen(
     //Destructure playlistWithCount - not-null assertion because of the if statement above
     val (playlist, itemCount) = playlistWithCount!!
 
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val listState = rememberLazyListState()
     val mediaMap = remember(mediaList) { mediaList.associateBy { it.mediaId } }
 

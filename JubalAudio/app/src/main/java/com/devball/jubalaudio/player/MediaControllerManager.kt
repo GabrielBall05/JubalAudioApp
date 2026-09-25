@@ -46,6 +46,9 @@ class MediaControllerManager @Inject constructor(
     private val _currentMediaItem = MutableStateFlow<MediaItem?>(null)
     val currentMediaItem = _currentMediaItem.asStateFlow()
 
+    private val _previousMediaItem = MutableStateFlow<MediaItem?>(null)
+    val previousMediaItem = _previousMediaItem.asStateFlow()
+
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying = _isPlaying.asStateFlow()
 
@@ -363,12 +366,13 @@ class MediaControllerManager @Inject constructor(
                     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                         super.onMediaItemTransition(mediaItem, reason)
 
-                        //Update current item and duration states
+                        //Update current and duration states
                         _currentMediaItem.value = mediaItem
                         _duration.value = player.duration.coerceAtLeast(0L)
 
                         //Remove all past manual queue items
                         consumePastQueueItems(player)
+
                         //Update all UI states to sync with ExoPlayer's timeline
                         updateUIStates(player)
                     }
@@ -376,6 +380,7 @@ class MediaControllerManager @Inject constructor(
                     //Executes when ExoPlayer's timeline changes
                     override fun onTimelineChanged(timeline: Timeline, reason: Int) {
                         super.onTimelineChanged(timeline, reason)
+
                         //Update all UI states to sync with ExoPlayer's timeline
                         updateUIStates(player)
 
@@ -492,6 +497,7 @@ class MediaControllerManager @Inject constructor(
         if (currentIndex == C.INDEX_UNSET || player.mediaItemCount == 0) {
             _manualQueueState.value = emptyList()
             _upNextState.value = emptyList()
+            _previousMediaItem.value = null
             return
         }
 
@@ -509,6 +515,10 @@ class MediaControllerManager @Inject constructor(
         //Update actual states with temp lists
         _manualQueueState.value = manualQueue
         _upNextState.value = upNext
+
+        //Additionally: Update previous item state
+        _previousMediaItem.value = if (currentIndex > 0) player.getMediaItemAt(currentIndex - 1)
+            else null
     }
 
     //Erase all manual queue items from timeline BEFORE current item
@@ -623,7 +633,7 @@ class MediaControllerManager @Inject constructor(
         _currentPosition.value = 0L
         _duration.value = 0L
         _isPlaying.value = false
-        _isShuffling.value = false //TODO: Maybe keep shuffle setting (by simply removing this line)
+        //_isShuffling.value = false //Keep current shuffling setting
         _repeatingCurrent.value = false
         _manualQueueState.value = emptyList()
         _upNextState.value = emptyList()

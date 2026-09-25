@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
@@ -50,10 +51,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.devball.jubalaudio.ui.components.common.ItemInfoColumn
+import com.devball.jubalaudio.ui.components.common.PlayerPager
 import com.devball.jubalaudio.ui.components.common.SurfacedImage
 import com.devball.jubalaudio.ui.components.dialogs.ConfirmationDialog
 import com.devball.jubalaudio.ui.components.dialogs.PlaylistFormDialog
@@ -79,6 +82,7 @@ fun ExpandedPlayerScreen(
     //Collect states from viewmodel
     val currentMediaItem by viewModel.currentMediaItem.collectAsStateWithLifecycle()
     val currentMediaEntity by viewModel.currentMediaEntity.collectAsStateWithLifecycle()
+    val previousMediaItem by viewModel.previousMediaItem.collectAsStateWithLifecycle()
     val isPlaying by viewModel.isPlaying.collectAsStateWithLifecycle()
     val currentPosition by viewModel.currentPosition.collectAsStateWithLifecycle()
     val duration by viewModel.duration.collectAsStateWithLifecycle()
@@ -98,7 +102,7 @@ fun ExpandedPlayerScreen(
 
     //Sheet states
     val queueSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val optionsSheetState = rememberModalBottomSheetState()
+    val optionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     //Slider states
     var sliderPosition by remember { mutableFloatStateOf(0F) }
@@ -128,7 +132,7 @@ fun ExpandedPlayerScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                    .padding(8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -159,63 +163,47 @@ fun ExpandedPlayerScreen(
                 }
             }
 
-            //Artwork
-            SurfacedImage(
-                model = currentMediaItem?.mediaMetadata?.artworkUri?.toString(),
-                contentDescription = "Artwork Image",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .aspectRatio(1f),
-            )
+            //Media Pager
+            PlayerPager(
+                previousMediaItem = previousMediaItem,
+                currentMediaItem = currentMediaItem,
+                nextMediaItem = manualQueue.firstOrNull() ?: upNext.firstOrNull(),
+                onSwipeToPrevious = {
+                    if (isRepeatingCurrent) viewModel.toggleRepeatMode()
+                    viewModel.seekToPrevious()
+                },
+                onSwipeToNext =  {
+                    if (isRepeatingCurrent) viewModel.toggleRepeatMode()
+                    viewModel.seekToNext()
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                //Repeat Button
+                IconButton(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .indicatorBorder(enabled = isRepeatingCurrent, color = MaterialTheme.colorScheme.primary)
+                        .clip(CircleShape)
+                        .aspectRatio(1f),
+                    onClick = { viewModel.toggleRepeatMode() }
+                ) {
+                    Icon(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(6.dp),
+                        imageVector = Icons.Default.Repeat,
+                        tint = if (isRepeatingCurrent) MaterialTheme.colorScheme.primary else LocalContentColor.current.copy(alpha = 0.75f),
+                        contentDescription = "Repeat Mode"
+                    )
+                }
+            }
 
-            //Information + Slider + Controls
+            //Slider + Controls
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 18.dp)
             ) {
-                //Title + Creator + Repeat Mode + Add To Playlist Button
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    ItemInfoColumn(
-                        paddingValues = PaddingValues(start = 6.dp),
-                        line1 = { Text(
-                            text = currentMediaItem?.mediaMetadata?.title?.toString() ?: "Unknown Title",
-                            style = MaterialTheme.typography.titleLarge,
-                            maxLines = 1,
-                            modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE)
-                        ) },
-                        line2 = { Text(
-                            text = currentMediaItem?.mediaMetadata?.artist?.toString() ?: "Unknown Creator",
-                            style = MaterialTheme.typography.bodyLarge,
-                            maxLines = 1,
-                            modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE)
-                        ) }
-                    )
-
-                    //Repeat Button
-                    IconButton(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .indicatorBorder(enabled = isRepeatingCurrent, color = MaterialTheme.colorScheme.primary)
-                            .clip(CircleShape)
-                            .aspectRatio(1f),
-                        onClick = { viewModel.toggleRepeatMode() }
-                    ) {
-                        Icon(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(6.dp),
-                            imageVector = Icons.Default.Repeat,
-                            tint = if (isRepeatingCurrent) MaterialTheme.colorScheme.primary else LocalContentColor.current.copy(alpha = 0.75f),
-                            contentDescription = "Repeat Mode"
-                        )
-                    }
-                }
-
                 //Slider + Times
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.fillMaxWidth()) {

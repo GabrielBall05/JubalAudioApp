@@ -97,7 +97,7 @@ class PlaybackPersistenceRepository @Inject constructor(
             dataStore.edit { prefs ->
                 prefs.remove(Keys.LAST_POSITION)
                 prefs.remove(Keys.CURRENT_INDEX)
-                prefs.remove(Keys.SHUFFLE_ON)
+                //prefs.remove(Keys.SHUFFLE_ON) //Keep current shuffling setting
                 prefs.remove(Keys.REPEATING_CURRENT)
                 prefs.remove(Keys.CURRENT_PLAYLIST_ID)
             }

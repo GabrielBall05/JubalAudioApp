@@ -1,21 +1,22 @@
 TODO:
 
 
-modalbottomsheet for item details requires scrolling (possibly only for people using buttons instead of gestures)
-keep current shuffling setting when clearing player (change clear functions in mcm and ppr)
 swipe image in explanded player screen to go next/prev
 	override repeatingCurrent if need be
+change iteminfocolumn to take list of lines rather than only giving options for 3 lines
+use Modifier.keepScreenOn() instead of custom screen on logic
 
 log statements everywhere (and improve its tag/message)
-horizontal orientation layouts - currently locked to portrait
 when copying/storing images, maybe try to make sure there are no duplicated or orphaned images to save space on phone
 snackbars instead of toasts
 thoroughly comment code and just make it look better
 better file organization
 better app icon
+horizontal orientation layouts - currently locked to portrait
 
 
-
+***KEEP CURRENT VERSION IN OPEN TESTING UNTIL THE MAJOR CHANGE IS FINISHED - THEN RELEASE TO PUBLIC***
+***Or just have it in production and attempt a migration***
 
 
 

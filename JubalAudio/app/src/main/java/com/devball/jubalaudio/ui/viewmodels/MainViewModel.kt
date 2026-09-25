@@ -37,6 +37,7 @@ class MainViewModel @Inject constructor(
 
     //Expose states from the manager
     val currentMediaItem = controllerManager.currentMediaItem
+    val previousMediaItem = controllerManager.previousMediaItem
     val isPlaying = controllerManager.isPlaying
     val currentPosition = controllerManager.currentPosition
     val duration = controllerManager.duration

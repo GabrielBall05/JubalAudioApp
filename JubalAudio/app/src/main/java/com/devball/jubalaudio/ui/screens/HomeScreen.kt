@@ -100,7 +100,7 @@ fun HomeScreen(
     val allStaleMedia by viewModel.allStaleMedia.collectAsStateWithLifecycle()
     val staleListForDisplay by remember { derivedStateOf { mediaList.filter { it.isStaleUri } } }
 
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val listState = rememberLazyListState()
     val mediaMap = remember(mediaList) { mediaList.associateBy { it.mediaId } }
 

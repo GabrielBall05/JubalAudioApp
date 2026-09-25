@@ -2,6 +2,7 @@ package com.devball.jubalaudio.ui.components.optionsheets
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
@@ -31,7 +32,8 @@ fun PlaylistOptionsSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 32.dp)
+            .navigationBarsPadding()
+            .padding(bottom = 16.dp)
     ) {
         Text(
             text = playlist.name,
