@@ -168,21 +168,17 @@ fun ExpandedPlayerScreen(
                 previousMediaItem = previousMediaItem,
                 currentMediaItem = currentMediaItem,
                 nextMediaItem = manualQueue.firstOrNull() ?: upNext.firstOrNull(),
-                onSwipeToPrevious = {
-                    if (isRepeatingCurrent) viewModel.toggleRepeatMode()
-                    viewModel.seekToPrevious()
-                },
-                onSwipeToNext =  {
-                    if (isRepeatingCurrent) viewModel.toggleRepeatMode()
-                    viewModel.seekToNext()
-                },
+                onSwipeToPrevious = { viewModel.seekToPrevious(ensureFullSeek = true) },
+                onSwipeToNext =  { viewModel.seekToNext() },
                 modifier = Modifier.weight(1f)
-            ) {
+            ) { isCurrentItem ->
+                val showAsRepeating = isRepeatingCurrent && isCurrentItem
+
                 //Repeat Button
                 IconButton(
                     modifier = Modifier
                         .size(48.dp)
-                        .indicatorBorder(enabled = isRepeatingCurrent, color = MaterialTheme.colorScheme.primary)
+                        .indicatorBorder(enabled = showAsRepeating, color = MaterialTheme.colorScheme.primary)
                         .clip(CircleShape)
                         .aspectRatio(1f),
                     onClick = { viewModel.toggleRepeatMode() }
@@ -192,7 +188,7 @@ fun ExpandedPlayerScreen(
                             .fillMaxSize()
                             .padding(6.dp),
                         imageVector = Icons.Default.Repeat,
-                        tint = if (isRepeatingCurrent) MaterialTheme.colorScheme.primary else LocalContentColor.current.copy(alpha = 0.75f),
+                        tint = if (showAsRepeating) MaterialTheme.colorScheme.primary else LocalContentColor.current.copy(alpha = 0.75f),
                         contentDescription = "Repeat Mode"
                     )
                 }

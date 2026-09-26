@@ -120,7 +120,7 @@ class MainViewModel @Inject constructor(
     //Player actions
     fun togglePlayPause() = controllerManager.togglePlayPause()
     fun seekToNext() = controllerManager.seekToNext()
-    fun seekToPrevious() = controllerManager.seekToPrevious()
+    fun seekToPrevious(ensureFullSeek: Boolean = false) = controllerManager.seekToPrevious(ensureFullSeek)
     fun seekTo(positionMs: Long) = controllerManager.seekTo(positionMs)
     fun toggleShuffle() = controllerManager.toggleShuffle()
     fun toggleRepeatMode() = controllerManager.toggleRepeatMode()

@@ -98,7 +98,13 @@ class MediaControllerManager @Inject constructor(
     fun seekToNext() = controller?.seekToNext()
 
     //Seek to previous media item - custom logic handled in ForwardingPlayer
-    fun seekToPrevious() = controller?.seekToPrevious()
+    fun seekToPrevious(ensureFullSeek: Boolean) {
+        val player = controller ?: return
+        //Force track skip and ignore 3-second restart rule
+        if (ensureFullSeek) player.seekToPreviousMediaItem()
+        //Standard behavior (restarts current item if duration is 3+ seconds)
+        else player.seekToPrevious()
+    }
 
     //Seeking within current media item
     fun seekTo(positionMs: Long) {
@@ -115,9 +121,10 @@ class MediaControllerManager @Inject constructor(
     //Toggle repeating current
     fun toggleRepeatMode() {
         val player = controller ?: return
-        _repeatingCurrent.value = !_repeatingCurrent.value //Toggle state
-        //Apply new repeat mode: ON = repeat current media item indefinitely; OFF = standard linear playback
-        player.repeatMode = if (_repeatingCurrent.value) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
+        //Flip repeat mode: ONE = repeat current media item indefinitely; OFF = standard linear playback
+        player.repeatMode = if (player.repeatMode == Player.REPEAT_MODE_ONE) Player.REPEAT_MODE_OFF
+            else Player.REPEAT_MODE_ONE
+        //onRepeatModeChanged handles toggling UI state
     }
 
     //Toggle shuffle mode
@@ -394,6 +401,12 @@ class MediaControllerManager @Inject constructor(
                         _isPlaying.value = isPlaying //Update UI state
                     }
 
+                    //Executes whenever repeat mode is changed
+                    override fun onRepeatModeChanged(repeatMode: Int) {
+                        super.onRepeatModeChanged(repeatMode)
+                        _repeatingCurrent.value = repeatMode == Player.REPEAT_MODE_ONE //Update UI state
+                    }
+
                     //Executes whenever playback state changes
                     override fun onPlaybackStateChanged(playbackState: Int) {
                         super.onPlaybackStateChanged(playbackState)
@@ -581,7 +594,7 @@ class MediaControllerManager @Inject constructor(
         val position = player.currentPosition
         val index = player.currentMediaItemIndex
         val isShuffling = _isShuffling.value
-        val isRepeating = _repeatingCurrent.value
+        val isRepeating = player.repeatMode == Player.REPEAT_MODE_ONE
         val playlistId = _currentPlaylistId.value
         val originalCopy = originalPlaylist.toList()
 

@@ -1,5 +1,6 @@
 TODO:
 
+mediapager flickers when resizing - always use 3 pages - populate with full list (its still memory efficient)
 improve mediapicker
 improve viewmodels
 

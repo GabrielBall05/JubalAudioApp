@@ -48,20 +48,26 @@ class PlaybackService : MediaSessionService() {
 
             //Intercept standard Next button clicks
             override fun seekToNext() {
+                //Turn off repeatingCurrent for the new current media item
+                if (repeatMode == REPEAT_MODE_ONE) repeatMode = REPEAT_MODE_OFF
                 super.seekToNext()
-                play()
+                play() //Ensure it plays
             }
 
             //Intercept absolute commands to seek to next media item
             override fun seekToNextMediaItem() {
+                //Turn off repeatingCurrent for the new current media item
+                if (repeatMode == REPEAT_MODE_ONE) repeatMode = REPEAT_MODE_OFF
                 super.seekToNextMediaItem()
-                play()
+                play() //Ensure it plays
             }
 
             //Intercept standard Previous button clicks
             override fun seekToPrevious() {
                 //Only execute custom seekToPrevious logic if player is actually seeking to previous
                 if ((currentPosition <= maxSeekToPreviousPosition) && hasPreviousMediaItem()) {
+                    //Turn off repeatingCurrent for the new current media item
+                    if (repeatMode == REPEAT_MODE_ONE) repeatMode = REPEAT_MODE_OFF
                     shiftQueueAndSeek { super.seekToPrevious() } //Perform custom logic
                 } else {
                     super.seekToPrevious() //Just restart the track
@@ -73,7 +79,9 @@ class PlaybackService : MediaSessionService() {
             override fun seekToPreviousMediaItem() {
                 //Only execute custom logic if player is actually seeking to previous media item
                 if (hasPreviousMediaItem()) {
-                    shiftQueueAndSeek { super.seekToPreviousMediaItem() }
+                    //Turn off repeatingCurrent for the new current media item
+                    if (repeatMode == REPEAT_MODE_ONE) repeatMode = REPEAT_MODE_OFF
+                    shiftQueueAndSeek { super.seekToPreviousMediaItem() } //Perform custom logic
                 } else {
                     super.seekToPreviousMediaItem()
                 }

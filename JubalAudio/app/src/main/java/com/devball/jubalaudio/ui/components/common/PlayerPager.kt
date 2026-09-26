@@ -30,7 +30,7 @@ fun PlayerPager(
     onSwipeToPrevious: () -> Unit,
     onSwipeToNext: () -> Unit,
     modifier: Modifier = Modifier,
-    additionalButtons: @Composable (() -> Unit)? = null
+    additionalButtons: @Composable ((isCurrentItem: Boolean) -> Unit)? = null
 ) {
     val hasPrevious = previousMediaItem != null
     val hasNext = nextMediaItem != null
@@ -79,6 +79,9 @@ fun PlayerPager(
             else -> nextMediaItem
         }
 
+        //Check if the page currently being drawn is the active item
+        val isCurrentItem = page == currentPageIndex
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -113,7 +116,7 @@ fun PlayerPager(
                     )
                 }
 
-                additionalButtons?.invoke() //Display any additional buttons given
+                additionalButtons?.invoke(isCurrentItem) //Display any additional buttons given
             }
         }
     }
