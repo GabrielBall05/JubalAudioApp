@@ -51,7 +51,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -74,9 +73,11 @@ import com.devball.jubalaudio.ui.components.listitems.MediaListItemSelectable
 import com.devball.jubalaudio.ui.components.listitems.MediaListItemStandard
 import com.devball.jubalaudio.ui.components.listitems.StaleUriListItem
 import com.devball.jubalaudio.ui.components.optionsheets.MediaOption
-import com.devball.jubalaudio.ui.components.optionsheets.MediaOptionsSheetContent
+import com.devball.jubalaudio.ui.components.optionsheets.MediaOptionsSheet
+import com.devball.jubalaudio.ui.components.optionsheets.MediaSheetAction
 import com.devball.jubalaudio.ui.components.optionsheets.PlaylistOption
 import com.devball.jubalaudio.ui.components.optionsheets.PlaylistOptionsSheet
+import com.devball.jubalaudio.ui.components.optionsheets.PlaylistSheetAction
 import com.devball.jubalaudio.ui.viewmodels.PlaylistDetailsViewModel
 import com.devball.jubalaudio.util.ObserveUiEvents
 import com.devball.jubalaudio.util.SwipeDismissable
@@ -430,19 +431,28 @@ fun PlaylistDetailsScreen(
             containerColor = MaterialTheme.colorScheme.surface
         ) {
             PlaylistOptionsSheet(
-                playlist = playlist,
-                showReorderOption = true,
-                onOptionClick = { option ->
-                    showPlaylistOptionsSheet = false
-                    when (option) {
-                        PlaylistOption.EDIT -> editingPlaylist = true
-                        PlaylistOption.PLAY_NOW -> onPlayPlaylistClick(playlist.playlistId, null)
-                        PlaylistOption.ADD_TO_QUEUE -> onAddToQueueClick(fullMediaList)
-                        PlaylistOption.ADD_MEDIA -> showMediaPicker = true
-                        PlaylistOption.REORDER -> isReordering = true
-                        PlaylistOption.DELETE -> showDeletePlaylistConfirmation = true
+                title = playlist.name,
+                onDismiss = { showPlaylistOptionsSheet = false },
+                actions = listOf(
+                    PlaylistSheetAction(PlaylistOption.EDIT) {
+                        editingPlaylist = true
+                    },
+                    PlaylistSheetAction(PlaylistOption.PLAY_NOW) {
+                        onPlayPlaylistClick(playlist.playlistId, null)
+                    },
+                    PlaylistSheetAction(PlaylistOption.ADD_TO_QUEUE) {
+                        onAddToQueueClick(fullMediaList)
+                    },
+                    PlaylistSheetAction(PlaylistOption.REORDER) {
+                        isReordering = true
+                    },
+                    PlaylistSheetAction(PlaylistOption.ADD_MEDIA) {
+                        showMediaPicker = true
+                    },
+                    PlaylistSheetAction(PlaylistOption.DELETE) {
+                        showDeletePlaylistConfirmation = true
                     }
-                }
+                )
             )
         }
     }
@@ -498,20 +508,26 @@ fun PlaylistDetailsScreen(
             sheetState = sheetState,
             containerColor = MaterialTheme.colorScheme.surface
         ) {
-            MediaOptionsSheetContent(
-                media = media,
-                showRemoveOption = true,
-                onOptionClick = { option ->
-                    selectedMediaItemForMenu = null
-                    when (option) {
-                        MediaOption.EDIT -> mediaToEdit = media
-                        MediaOption.PLAY_NOW -> onPlayMediaClick(media)
-                        MediaOption.ADD_TO_QUEUE -> onAddToQueueClick(listOf(media))
-                        MediaOption.ADD_TO_PLAYLIST -> idsToAddToPlaylists = listOf(media.mediaId)
-                        MediaOption.REMOVE_FROM_PLAYLIST -> idsToRemove = listOf(media.mediaId)
-                        MediaOption.DELETE -> { /* Not used in playlist details screen */ }
+            MediaOptionsSheet(
+                title = media.title,
+                onDismiss = { selectedMediaItemForMenu = null },
+                actions = listOf(
+                    MediaSheetAction(MediaOption.EDIT) {
+                        mediaToEdit = media
+                    },
+                    MediaSheetAction(MediaOption.PLAY_NOW) {
+                        onPlayMediaClick(media)
+                    },
+                    MediaSheetAction(MediaOption.ADD_TO_QUEUE) {
+                        onAddToQueueClick(listOf(media))
+                    },
+                    MediaSheetAction(MediaOption.ADD_TO_PLAYLIST) {
+                        idsToAddToPlaylists = listOf(media.mediaId)
+                    },
+                    MediaSheetAction(MediaOption.REMOVE_FROM_PLAYLIST) {
+                        idsToRemove = listOf(media.mediaId)
                     }
-                }
+                )
             )
         }
     }

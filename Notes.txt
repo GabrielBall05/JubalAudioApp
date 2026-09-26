@@ -1,7 +1,7 @@
 TODO:
 
+improve mediapicker
 
-change options sheets to take in a list of that enum type to determine which options to display
 
 
 log statements everywhere (and improve its tag/message)

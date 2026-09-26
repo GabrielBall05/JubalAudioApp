@@ -57,7 +57,8 @@ import com.devball.jubalaudio.ui.components.dialogs.ConfirmationDialog
 import com.devball.jubalaudio.ui.components.dialogs.PlaylistFormDialog
 import com.devball.jubalaudio.ui.components.dialogs.PlaylistPicker
 import com.devball.jubalaudio.ui.components.optionsheets.MediaOption
-import com.devball.jubalaudio.ui.components.optionsheets.MediaOptionsSheetContent
+import com.devball.jubalaudio.ui.components.optionsheets.MediaOptionsSheet
+import com.devball.jubalaudio.ui.components.optionsheets.MediaSheetAction
 import com.devball.jubalaudio.ui.viewmodels.MainViewModel
 import com.devball.jubalaudio.util.indicatorBorder
 
@@ -397,22 +398,23 @@ fun ExpandedPlayerScreen(
                 sheetState = optionsSheetState,
                 containerColor = MaterialTheme.colorScheme.surface
             ) {
-                MediaOptionsSheetContent(
-                    media = media,
-                    showEditOption = false,
-                    showPlayOption = false,
-                    showRemoveOption = isCurrentMediaInCurrentPlaylist,
-                    onOptionClick = { option ->
-                        showMediaItemMenu = false
-                        when (option) {
-                            MediaOption.EDIT -> { /* TODO: MAYBE IMPLEMENT - OR DON'T, IDK */ }
-                            MediaOption.PLAY_NOW -> { /* Not used in Expanded Player Screen (already playing) */ }
-                            MediaOption.ADD_TO_QUEUE -> { viewModel.addMediaToQueue(listOf(media)) }
-                            MediaOption.ADD_TO_PLAYLIST -> { showPlaylistPicker = true }
-                            MediaOption.REMOVE_FROM_PLAYLIST -> { showRemoveConfirmation = true }
-                            MediaOption.DELETE -> { /* Not used in Expanded Player Screen */ }
+                MediaOptionsSheet(
+                    title = media.title,
+                    onDismiss = { showMediaItemMenu = false },
+                    actions = listOf(
+                        MediaSheetAction(MediaOption.EDIT) {
+                            /* TODO: IMPLEMENT ONCE TAG EDITING IS READY (should attempt to edit timeline items after edits) */
+                        },
+                        MediaSheetAction(MediaOption.ADD_TO_QUEUE) {
+                            viewModel.addMediaToQueue(listOf(media))
+                        },
+                        MediaSheetAction(MediaOption.ADD_TO_PLAYLIST) {
+                            showPlaylistPicker = true
+                        },
+                        MediaSheetAction(MediaOption.REMOVE_FROM_PLAYLIST) {
+                            showRemoveConfirmation = true
                         }
-                    }
+                    )
                 )
             }
         }

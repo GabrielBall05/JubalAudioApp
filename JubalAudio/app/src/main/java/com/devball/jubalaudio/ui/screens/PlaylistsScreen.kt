@@ -42,6 +42,7 @@ import com.devball.jubalaudio.ui.components.dialogs.SortOrderDialog
 import com.devball.jubalaudio.ui.components.listitems.PlaylistListItemStandard
 import com.devball.jubalaudio.ui.components.optionsheets.PlaylistOption
 import com.devball.jubalaudio.ui.components.optionsheets.PlaylistOptionsSheet
+import com.devball.jubalaudio.ui.components.optionsheets.PlaylistSheetAction
 import com.devball.jubalaudio.ui.viewmodels.PlaylistsViewModel
 import com.devball.jubalaudio.util.ObserveUiEvents
 import com.devball.jubalaudio.util.PlaylistsSortOrder
@@ -184,18 +185,25 @@ fun PlaylistsScreen(
             containerColor = MaterialTheme.colorScheme.surface
         ) {
             PlaylistOptionsSheet(
-                playlist = playlist,
-                onOptionClick = { option ->
-                    selectedPlaylistForMenu = null
-                    when (option) {
-                        PlaylistOption.EDIT -> playlistToEdit = playlist
-                        PlaylistOption.PLAY_NOW -> onPlayPlaylistClick(playlist.playlistId)
-                        PlaylistOption.ADD_TO_QUEUE -> onAddPlaylistToQueueClick(playlist.playlistId)
-                        PlaylistOption.REORDER -> { /* Reorder option not used here */ }
-                        PlaylistOption.ADD_MEDIA -> playlistToAddMedia = playlist
-                        PlaylistOption.DELETE -> playlistToDelete = playlist
+                title = playlist.name,
+                onDismiss = { selectedPlaylistForMenu = null },
+                actions = listOf(
+                    PlaylistSheetAction(PlaylistOption.EDIT) {
+                        playlistToEdit = playlist
+                    },
+                    PlaylistSheetAction(PlaylistOption.PLAY_NOW) {
+                        onPlayPlaylistClick(playlist.playlistId)
+                    },
+                    PlaylistSheetAction(PlaylistOption.ADD_TO_QUEUE) {
+                        onAddPlaylistToQueueClick(playlist.playlistId)
+                    },
+                    PlaylistSheetAction(PlaylistOption.ADD_MEDIA) {
+                        playlistToAddMedia = playlist
+                    },
+                    PlaylistSheetAction(PlaylistOption.DELETE) {
+                        playlistToDelete = playlist
                     }
-                }
+                )
             )
         }
     }

@@ -16,21 +16,53 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.devball.jubalaudio.data.local.MediaEntity
 
-enum class MediaOption {
-    EDIT, PLAY_NOW, ADD_TO_QUEUE, ADD_TO_PLAYLIST, REMOVE_FROM_PLAYLIST, DELETE
+enum class MediaOption(
+    val label: String,
+    val icon: ImageVector,
+    val isDestructive: Boolean = false
+) {
+    EDIT(
+        label = "Edit Details",
+        icon = Icons.Default.Edit
+    ),
+    PLAY_NOW(
+        label = "Play",
+        icon = Icons.Default.PlayArrow
+    ),
+    ADD_TO_QUEUE(
+        label = "Add to Queue",
+        icon = Icons.Default.AddToQueue
+    ),
+    ADD_TO_PLAYLIST(
+        label = "Add to Playlist",
+        icon = Icons.AutoMirrored.Filled.PlaylistAdd
+    ),
+    REMOVE_FROM_PLAYLIST(
+        label = "Remove from Playlist",
+        icon = Icons.Default.PlaylistRemove,
+        isDestructive = true
+    ),
+    DELETE(
+        label = "Delete",
+        icon = Icons.Default.DeleteForever,
+        isDestructive = true
+    )
 }
 
+data class MediaSheetAction(
+    val option: MediaOption,
+    val onClick: () -> Unit
+)
+
 @Composable
-fun MediaOptionsSheetContent(
-    media: MediaEntity,
-    showEditOption: Boolean = true,
-    showPlayOption: Boolean = true,
-    showRemoveOption: Boolean = false,
-    showDeleteOption: Boolean = false,
-    onOptionClick: (MediaOption) -> Unit
+fun MediaOptionsSheet(
+    title: String,
+    actions: List<MediaSheetAction>,
+    onDismiss: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -39,7 +71,7 @@ fun MediaOptionsSheetContent(
             .padding(bottom = 16.dp)
     ) {
         Text(
-            text = media.title,
+            text = title,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(16.dp),
             maxLines = 1
@@ -47,50 +79,15 @@ fun MediaOptionsSheetContent(
 
         HorizontalDivider()
 
-        //Edit
-        if (showEditOption) {
+        actions.forEach { (option, onClick) ->
             MenuOptionItem(
-                icon = Icons.Default.Edit,
-                label = "Edit Details",
-                onClick = { onOptionClick(MediaOption.EDIT) }
-            )
-        }
-        //Play now
-        if (showPlayOption) {
-            MenuOptionItem(
-                icon = Icons.Default.PlayArrow,
-                label = "Play",
-                onClick = { onOptionClick(MediaOption.PLAY_NOW) }
-            )
-        }
-        //Add to Queue
-        MenuOptionItem(
-            icon = Icons.Default.AddToQueue,
-            label = "Add to Queue",
-            onClick = { onOptionClick(MediaOption.ADD_TO_QUEUE) }
-        )
-        //Add to Playlist
-        MenuOptionItem(
-            icon = Icons.AutoMirrored.Filled.PlaylistAdd,
-            label = "Add to Playlist",
-            onClick = { onOptionClick(MediaOption.ADD_TO_PLAYLIST) }
-        )
-        //Remove from Playlist
-        if (showRemoveOption) {
-            MenuOptionItem(
-                icon = Icons.Default.PlaylistRemove,
-                label = "Remove from Playlist",
-                isDestructive = true,
-                onClick = { onOptionClick(MediaOption.REMOVE_FROM_PLAYLIST) }
-            )
-        }
-        //Delete
-        if (showDeleteOption) {
-            MenuOptionItem(
-                icon = Icons.Default.DeleteForever,
-                label = "Delete",
-                isDestructive = true,
-                onClick = { onOptionClick(MediaOption.DELETE) }
+                icon = option.icon,
+                label = option.label,
+                isDestructive = option.isDestructive,
+                onClick = {
+                    onDismiss() //Always dismiss the sheet
+                    onClick() //Execute option click logic
+                }
             )
         }
     }

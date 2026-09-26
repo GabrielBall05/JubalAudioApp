@@ -63,7 +63,8 @@ import com.devball.jubalaudio.ui.components.dialogs.SortOrderDialog
 import com.devball.jubalaudio.ui.components.listitems.MediaListItemSelectable
 import com.devball.jubalaudio.ui.components.listitems.StaleUriListItem
 import com.devball.jubalaudio.ui.components.optionsheets.MediaOption
-import com.devball.jubalaudio.ui.components.optionsheets.MediaOptionsSheetContent
+import com.devball.jubalaudio.ui.components.optionsheets.MediaOptionsSheet
+import com.devball.jubalaudio.ui.components.optionsheets.MediaSheetAction
 import com.devball.jubalaudio.ui.viewmodels.HomeViewModel
 import com.devball.jubalaudio.util.MediaSortOrder
 import com.devball.jubalaudio.util.ObserveUiEvents
@@ -285,20 +286,26 @@ fun HomeScreen(
             sheetState = sheetState,
             containerColor = MaterialTheme.colorScheme.surface
         ) {
-            MediaOptionsSheetContent(
-                media = media,
-                showDeleteOption = true,
-                onOptionClick = { option ->
-                    selectedMediaItemForMenu = null
-                    when (option) {
-                        MediaOption.EDIT -> mediaToEdit = media
-                        MediaOption.PLAY_NOW -> onPlayMediaClick(media)
-                        MediaOption.ADD_TO_QUEUE -> onAddToQueueClick(listOf(media))
-                        MediaOption.ADD_TO_PLAYLIST -> idsToAddToPlaylists = listOf(media.mediaId)
-                        MediaOption.REMOVE_FROM_PLAYLIST -> { /* Not used in home screen */ }
-                        MediaOption.DELETE -> idsToDelete = listOf(media.mediaId)
+            MediaOptionsSheet(
+                title = media.title,
+                onDismiss = { selectedMediaItemForMenu = null },
+                actions = listOf(
+                    MediaSheetAction(MediaOption.EDIT) {
+                        mediaToEdit = media
+                    },
+                    MediaSheetAction(MediaOption.PLAY_NOW) {
+                        onPlayMediaClick(media)
+                    },
+                    MediaSheetAction(MediaOption.ADD_TO_QUEUE) {
+                        onAddToQueueClick(listOf(media))
+                    },
+                    MediaSheetAction(MediaOption.ADD_TO_PLAYLIST) {
+                        idsToAddToPlaylists = listOf(media.mediaId)
+                    },
+                    MediaSheetAction(MediaOption.DELETE) {
+                        idsToDelete = listOf(media.mediaId)
                     }
-                }
+                )
             )
         }
     }
