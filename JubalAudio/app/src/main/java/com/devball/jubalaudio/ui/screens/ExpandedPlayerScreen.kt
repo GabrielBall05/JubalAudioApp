@@ -402,9 +402,7 @@ fun ExpandedPlayerScreen(
                     title = media.title,
                     onDismiss = { showMediaItemMenu = false },
                     actions = listOf(
-                        MediaSheetAction(MediaOption.EDIT) {
-                            /* TODO: IMPLEMENT ONCE TAG EDITING IS READY (should attempt to edit timeline items after edits) */
-                        },
+                        /* TODO: Add Edit option when tag editing is done (should also attempt to edit timeline items after edits) */
                         MediaSheetAction(MediaOption.ADD_TO_QUEUE) {
                             viewModel.addMediaToQueue(listOf(media))
                         },

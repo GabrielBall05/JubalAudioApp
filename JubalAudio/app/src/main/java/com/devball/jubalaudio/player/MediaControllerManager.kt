@@ -417,7 +417,7 @@ class MediaControllerManager @Inject constructor(
                                             playPlaylist(
                                                 mediaItems = freshItems,
                                                 playlistId = playlistId,
-                                                startItemIndex = 0,
+                                                startItemIndex = -1,
                                                 startShuffled = _isShuffling.value
                                             )
                                         }
