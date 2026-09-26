@@ -1,11 +1,15 @@
 TODO:
 
-mediapager flickers when resizing - always use 3 pages - populate with full list (its still memory efficient)
+drag and drop reordering
+	make sure index offsets are dynamic (handle currently playing empty, manual queue empty, up next empty, etc)
+	handle actual timeline changing logic
+	ensure originalPlaylist never has duplicates just in case
+
 improve mediapicker
 improve viewmodels
 
 
-
+mediapager flickers when resizing - populate with full list?
 log statements everywhere (and improve its tag/message)
 when copying/storing images, maybe try to make sure there are no duplicated or orphaned images to save space on phone
 snackbars instead of toasts

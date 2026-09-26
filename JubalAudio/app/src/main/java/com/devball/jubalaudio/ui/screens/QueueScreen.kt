@@ -1,6 +1,7 @@
 package com.devball.jubalaudio.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -36,6 +38,8 @@ import com.devball.jubalaudio.ui.components.listitems.QueueItemImageSize
 import com.devball.jubalaudio.ui.components.listitems.QueueItemPadding
 import com.devball.jubalaudio.util.SwipeDismissable
 import com.devball.jubalaudio.util.SwipeDismissableBackground
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun QueueScreen(
@@ -59,10 +63,26 @@ fun QueueScreen(
 
     var scrollToTopTrigger by remember { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
+
+    //Scroll to top of list/screen on skipTo operations
     LaunchedEffect(scrollToTopTrigger) {
         if (scrollToTopTrigger > 0) {
             listState.scrollToItem(0)
         }
+    }
+
+    //Dynamic offset calculations
+    val nowPlayingSectionCount = if (currentlyPlaying != null) 1 else 0
+    val manualQueueSectionCount = if (manualQueue.isNotEmpty()) manualQueue.size + 1 else 0
+
+    //Reorderable list states
+    val reorderableManualQueueListState = rememberReorderableLazyListState(listState) { from, to ->
+        val offset = nowPlayingSectionCount + 1
+        onMoveManualQueueItem(from.index - offset, to.index - offset)
+    }
+    val reorderableUpNextListState = rememberReorderableLazyListState(listState) { from, to ->
+        val offset = nowPlayingSectionCount + manualQueueSectionCount + 1
+        onMoveUpNextItem(from.index - offset, to.index - offset)
     }
 
     //Screen UI
@@ -83,11 +103,7 @@ fun QueueScreen(
                 //Row Item Content
                 QueueItem(
                     item = current,
-                    isFirst = true,
-                    isLast = true,
-                    isPlaying = true,
-                    onMoveUp = {  },
-                    onMoveDown = {  }
+                    isPlaying = true
                 )
             }
         }
@@ -118,28 +134,31 @@ fun QueueScreen(
             }
             itemsIndexed(
                 items = manualQueue,
-                key = { _, item -> "manual_${item.mediaId}_${item.hashCode()}" }
+                key = { _, item -> item.mediaId }
             ) { index, item ->
-                SwipeDismissable(
-                    modifier = Modifier.animateItem(),
-                    onDismiss = { onRemoveItemAtIndex(index, true) },
-                    background = { SwipeDismissableBackground(
-                        imageVector = Icons.Default.DeleteOutline,
-                        modifier = Modifier.padding(QueueItemPadding),
-                        iconSize = QueueItemImageSize
-                    ) }
-                ) {
-                    QueueItem(
-                        item = item,
-                        isFirst = (index == 0),
-                        isLast = (index == manualQueue.size - 1),
-                        onClick = {
-                            onManualQueueSkipToIndex(index)
-                            scrollToTopTrigger++
-                        },
-                        onMoveUp = { onMoveManualQueueItem(index, index - 1) },
-                        onMoveDown = { onMoveManualQueueItem(index, index + 1) }
-                    )
+                ReorderableItem(reorderableManualQueueListState, key = item.mediaId) { isDragging ->
+                    //val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp) //TODO: Implementt
+
+                    SwipeDismissable(
+                        modifier = Modifier
+                            //.shadow(elevation) //TODO: Implement
+                            .animateItem(),
+                        onDismiss = { onRemoveItemAtIndex(index, true) },
+                        background = { SwipeDismissableBackground(
+                            imageVector = Icons.Default.DeleteOutline,
+                            modifier = Modifier.padding(QueueItemPadding),
+                            iconSize = QueueItemImageSize
+                        ) }
+                    ) {
+                        QueueItem(
+                            item = item,
+                            dragHandleModifier = Modifier.draggableHandle(),
+                            onClick = {
+                                onManualQueueSkipToIndex(index)
+                                scrollToTopTrigger++
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -157,28 +176,31 @@ fun QueueScreen(
             }
             itemsIndexed(
                 items = upNext,
-                key = { _, item -> "upnext_${item.mediaId}_${item.hashCode()}" }
+                key = { _, item -> item.mediaId }
             ) { index, item ->
-                SwipeDismissable(
-                    modifier = Modifier.animateItem(),
-                    onDismiss = { onRemoveItemAtIndex(index, false) },
-                    background = { SwipeDismissableBackground(
-                        imageVector = Icons.Default.DeleteOutline,
-                        modifier = Modifier.padding(QueueItemPadding),
-                        iconSize = QueueItemImageSize
-                    ) }
-                ) {
-                    QueueItem(
-                        item = item,
-                        isFirst = (index == 0),
-                        isLast = (index == upNext.size - 1),
-                        onClick = {
-                            onUpNextSkipToIndex(index)
-                            scrollToTopTrigger++
-                        },
-                        onMoveUp = { onMoveUpNextItem(index, index - 1) },
-                        onMoveDown = { onMoveUpNextItem(index, index + 1) }
-                    )
+                ReorderableItem(reorderableUpNextListState, key = item.mediaId) { isDragging ->
+                    //val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp) //TODO: Implement
+
+                    SwipeDismissable(
+                        modifier = Modifier
+                            //.shadow(elevation) //TODO: Implement
+                            .animateItem(),
+                        onDismiss = { onRemoveItemAtIndex(index, false) },
+                        background = { SwipeDismissableBackground(
+                            imageVector = Icons.Default.DeleteOutline,
+                            modifier = Modifier.padding(QueueItemPadding),
+                            iconSize = QueueItemImageSize
+                        ) }
+                    ) {
+                        QueueItem(
+                            item = item,
+                            dragHandleModifier = Modifier.draggableHandle(),
+                            onClick = {
+                                onUpNextSkipToIndex(index)
+                                scrollToTopTrigger++
+                            }
+                        )
+                    }
                 }
             }
         }

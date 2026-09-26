@@ -5,9 +5,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Reorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -29,12 +32,9 @@ val QueueItemImageSize = 50.dp
 fun QueueItem(
     item: MediaItem,
     modifier: Modifier = Modifier,
-    isFirst: Boolean,
-    isLast: Boolean,
+    dragHandleModifier: Modifier = Modifier,
     isPlaying: Boolean = false,
-    onClick: () -> Unit = {  },
-    onMoveUp: () -> Unit,
-    onMoveDown: () -> Unit
+    onClick: () -> Unit = {  }
 ) {
     Row(
         modifier = modifier
@@ -69,28 +69,16 @@ fun QueueItem(
             )
         }
 
-        //Reordering Buttons
-        if (!(isFirst && isLast)) {
-            IconButton(
-                onClick = onMoveUp,
-                enabled = !isFirst,
-                colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                )
-            ) {
-                Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = "Move Up")
-            }
-            IconButton(
-                onClick = onMoveDown,
-                enabled = !isLast,
-                colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                )
-            ) {
-                Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = "Move Down")
-            }
+        //Reordering Drag Handle
+        if (!isPlaying) {
+            Icon(
+                imageVector = Icons.Default.DragHandle,
+                contentDescription = "Reorder",
+                modifier = dragHandleModifier
+                    .padding(8.dp)
+                    .size(24.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
