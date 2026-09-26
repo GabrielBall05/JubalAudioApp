@@ -5,7 +5,6 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -99,21 +98,20 @@ fun PlayerPager(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ItemInfoColumn(
-                    paddingValues = PaddingValues(end = 8.dp),
-                    line1 = { Text(
+                WeightedColumn(paddingValues = PaddingValues(end = 8.dp)) {
+                    Text(
                         text = item?.mediaMetadata?.title?.toString() ?: "Unknown Title",
                         style = MaterialTheme.typography.headlineSmall,
                         maxLines = 1,
                         modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE)
-                    ) },
-                    line2 = { Text(
+                    )
+                    Text(
                         text = item?.mediaMetadata?.artist?.toString() ?: "Unknown Creator",
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
                         modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE)
-                    ) }
-                )
+                    )
+                }
 
                 additionalButtons?.invoke() //Display any additional buttons given
             }

@@ -19,8 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
-import com.devball.jubalaudio.ui.components.common.ItemInfoColumn
 import com.devball.jubalaudio.ui.components.common.SurfacedImage
+import com.devball.jubalaudio.ui.components.common.WeightedColumn
 
 val QueueItemPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
 val QueueItemImageSize = 50.dp
@@ -54,20 +54,20 @@ fun QueueItem(
         )
 
         //Queue (Media) Item Info
-        ItemInfoColumn(
-            line1 = { Text(
+        WeightedColumn {
+            Text(
                 text = item.mediaMetadata.title.toString(),
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            ) },
-            line2 = { Text(
+            )
+            Text(
                 text = item.mediaMetadata.artist.toString(),
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            ) }
-        )
+            )
+        }
 
         //Reordering Buttons
         if (!(isFirst && isLast)) {

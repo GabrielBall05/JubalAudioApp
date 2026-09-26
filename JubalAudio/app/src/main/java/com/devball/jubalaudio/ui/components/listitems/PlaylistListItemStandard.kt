@@ -17,8 +17,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.devball.jubalaudio.data.local.PlaylistEntity
-import com.devball.jubalaudio.ui.components.common.ItemInfoColumn
 import com.devball.jubalaudio.ui.components.common.SurfacedImage
+import com.devball.jubalaudio.ui.components.common.WeightedColumn
 
 @Composable
 fun PlaylistListItemStandard(
@@ -43,19 +43,19 @@ fun PlaylistListItemStandard(
 
 
         //Playlist Item Info
-        ItemInfoColumn(
-            line1 = { Text(
+        WeightedColumn {
+            Text(
                 text = playlist.name,
                 style = MaterialTheme.typography.headlineSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            ) },
-            line2 = { Text(
+            )
+            Text(
                 text = countText,
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1
-            ) }
-        )
+            )
+        }
 
         //More Button - Brings up menu for things like delete
         IconButton(onClick = { onMoreClick(playlist) }) {

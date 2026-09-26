@@ -1,13 +1,11 @@
 package com.devball.jubalaudio.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
@@ -55,16 +52,13 @@ import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.devball.jubalaudio.ui.components.common.ItemInfoColumn
 import com.devball.jubalaudio.ui.components.common.PlayerPager
-import com.devball.jubalaudio.ui.components.common.SurfacedImage
 import com.devball.jubalaudio.ui.components.dialogs.ConfirmationDialog
 import com.devball.jubalaudio.ui.components.dialogs.PlaylistFormDialog
 import com.devball.jubalaudio.ui.components.dialogs.PlaylistPicker
 import com.devball.jubalaudio.ui.components.optionsheets.MediaOption
 import com.devball.jubalaudio.ui.components.optionsheets.MediaOptionsSheetContent
 import com.devball.jubalaudio.ui.viewmodels.MainViewModel
-import com.devball.jubalaudio.util.KeepScreenOn
 import com.devball.jubalaudio.util.indicatorBorder
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,9 +71,7 @@ fun ExpandedPlayerScreen(
     val infinitePlayback by viewModel.infinitePlayback.collectAsStateWithLifecycle()
     val keepScreenOn by viewModel.keepScreenOn.collectAsStateWithLifecycle()
 
-    if (keepScreenOn) KeepScreenOn() //Call helper composable to ensure the screen stays on while this screen/composable is active
-
-    //Collect states from viewmodel
+    //Collect player states from viewmodel
     val currentMediaItem by viewModel.currentMediaItem.collectAsStateWithLifecycle()
     val currentMediaEntity by viewModel.currentMediaEntity.collectAsStateWithLifecycle()
     val previousMediaItem by viewModel.previousMediaItem.collectAsStateWithLifecycle()
@@ -90,6 +82,8 @@ fun ExpandedPlayerScreen(
     val isShuffleModeEnabled by viewModel.isShuffleModeEnabled.collectAsStateWithLifecycle()
     val manualQueue by viewModel.manualQueue.collectAsStateWithLifecycle()
     val upNext by viewModel.upNext.collectAsStateWithLifecycle()
+
+    //Collect data states from viewmodel
     val availablePlaylists by viewModel.availablePlaylists.collectAsStateWithLifecycle()
     val currentPlaylist by viewModel.currentPlaylist.collectAsStateWithLifecycle()
     val isCurrentMediaInCurrentPlaylist by viewModel.isCurrentMediaInCurrentPlaylist.collectAsStateWithLifecycle()
@@ -116,9 +110,14 @@ fun ExpandedPlayerScreen(
         if (showPlaylistPicker) currentMediaEntity?.let { viewModel.refreshAvailablePlaylists(it.mediaId) }
     }
 
+    val screenOnModifier = if (keepScreenOn) Modifier.keepScreenOn() else Modifier
 
     //Screen UI
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .then(screenOnModifier) //Apply keep screen on setting
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()

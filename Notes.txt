@@ -1,10 +1,8 @@
 TODO:
 
 
-swipe image in explanded player screen to go next/prev
-	override repeatingCurrent if need be
-change iteminfocolumn to take list of lines rather than only giving options for 3 lines
-use Modifier.keepScreenOn() instead of custom screen on logic
+change options sheets to take in a list of that enum type to determine which options to display
+
 
 log statements everywhere (and improve its tag/message)
 when copying/storing images, maybe try to make sure there are no duplicated or orphaned images to save space on phone
@@ -36,3 +34,10 @@ Maybe:
 @HomeScreen.kt   @PlaylistsScreen.kt   @PlaylistDetailsScreen.kt   @HomeViewModel.kt   @PlaylistsViewModel.kt   @PlaylistDetailsViewModel.kt 
 So, I seem to have a lot of duplicated code. for example, in home screen and playlist details screen, i have a couple hundred lines of code on both screens that are essentially the same thing (sometimes a little different), handling a media list item's options (or handling a list of media items' bulk options). In turn, i have a lot of same/similar code in the respective viewmodels.There are other examples as well.
 So, I would like to ask you what the best way of handling this is? say i make another screen where media list items appear and i want the same abilities (like edit, play, add to queue, delete, remove from playlist, and all the bulk options too). It would require duplicating another couple hundred loc. I figure this is bad practice right? so, how does one alleviate this? is there a specific design pattern? I want to do this the industry standard way where the code is actually completely reusable and not duplicated anywhere if possible.
+
+
+
+
+
+i have a playlistsviewmodel for purposes of editing and performing other actions on all playlists the user has. i also have playlistdetailsviewmodel for purposes of editing and performing actions on the current playlist in playlistdetailsscreen. but playlistdetailsscreen also is meant to give users the option to edit and perform actions on all the media items in their playlist. but those actions can also be performed in home screen. so, should I move away from my current viewmodels which are by screen: homevm, playlistsvm, playlistdetailsvm, playervm, and instead move towards single purpose viewmodels such as mediavm, playlistsvm, playervm? then what about my other sort of miscellaneous stuff like searching, filtering, lists, etc. that all exists in the viewmodels too, some (but not all) of which is also duplicated 
+

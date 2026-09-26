@@ -17,8 +17,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.devball.jubalaudio.data.local.MediaEntity
-import com.devball.jubalaudio.ui.components.common.ItemInfoColumn
 import com.devball.jubalaudio.ui.components.common.SurfacedImage
+import com.devball.jubalaudio.ui.components.common.WeightedColumn
 
 @Composable
 fun MediaListItemStandard(
@@ -44,20 +44,20 @@ fun MediaListItemStandard(
         )
 
         //Media Item Info
-        ItemInfoColumn(
-            line1 = { Text(
+        WeightedColumn() {
+            Text(
                 text = media.title,
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            ) },
-            line2 = { Text(
+            )
+            Text(
                 text = media.creator,
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            ) }
-        )
+            )
+        }
 
         //More Button (ellipsis) - brings up menu for edit, play, add to queue, add to playlist, delete, etc.
         IconButton(onClick = { onMoreClick(media) }) {

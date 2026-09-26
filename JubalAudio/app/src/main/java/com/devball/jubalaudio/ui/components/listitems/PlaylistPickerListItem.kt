@@ -14,9 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.devball.jubalaudio.data.local.PlaylistEntity
-import com.devball.jubalaudio.ui.components.common.ItemInfoColumn
 import com.devball.jubalaudio.ui.components.common.SelectionIcon
 import com.devball.jubalaudio.ui.components.common.SurfacedImage
+import com.devball.jubalaudio.ui.components.common.WeightedColumn
 
 @Composable
 fun PlaylistPickerListItem(
@@ -39,14 +39,14 @@ fun PlaylistPickerListItem(
         )
 
         //Playlist Name
-        ItemInfoColumn(
-            line1 = { Text(
-                    text = playlist.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-            ) }
-        )
+        WeightedColumn {
+            Text(
+                text = playlist.name,
+                style = MaterialTheme.typography.titleLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
 
         //Checkbox
         SelectionIcon(isSelected = isSelected)

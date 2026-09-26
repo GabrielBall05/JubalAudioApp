@@ -51,6 +51,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -58,9 +59,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.devball.jubalaudio.data.local.MediaEntity
 import com.devball.jubalaudio.ui.components.common.BulkActionsBar
 import com.devball.jubalaudio.ui.components.common.EmptyMessage
-import com.devball.jubalaudio.ui.components.common.ItemInfoColumn
 import com.devball.jubalaudio.ui.components.common.SearchBar
 import com.devball.jubalaudio.ui.components.common.SurfacedImage
+import com.devball.jubalaudio.ui.components.common.WeightedColumn
 import com.devball.jubalaudio.ui.components.dialogs.ConfirmationDialog
 import com.devball.jubalaudio.ui.components.dialogs.EditMediaBulkDialog
 import com.devball.jubalaudio.ui.components.dialogs.EditMediaDialog
@@ -111,7 +112,7 @@ fun PlaylistDetailsScreen(
 
     //Show loading dialog if playlist hasn't been fetched yet
     if (playlistWithCount == null) {
-        LoadingDialog()
+        LoadingDialog(removeDim = true)
         return
     }
 
@@ -200,25 +201,24 @@ fun PlaylistDetailsScreen(
                     )
 
                     //Playlist Details
-                    ItemInfoColumn(
-                        paddingValues = PaddingValues(start = 8.dp),
-                        line1 = { Text(
+                    WeightedColumn(paddingValues = PaddingValues(start = 8.dp)) {
+                        Text(
                             text = playlist.name,
                             style = MaterialTheme.typography.titleLarge,
                             maxLines = if (playlist.description != null) 1 else 2,
                             overflow = TextOverflow.Ellipsis
-                        ) },
-                        line2 = { playlist.description?.let { description -> Text(
+                        )
+                        playlist.description?.let { description -> Text(
                             text = description,
                             style = MaterialTheme.typography.titleMedium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
-                        ) } },
-                        line3 = { Text(
+                        ) }
+                        Text(
                             text = "$itemCount items",
                             style = MaterialTheme.typography.bodyLarge
-                        ) }
-                    )
+                        )
+                    }
                 }
 
                 //Menu Button

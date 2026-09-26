@@ -19,8 +19,8 @@ import androidx.compose.ui.unit.dp
 import com.devball.jubalaudio.data.local.MediaEntity
 import com.devball.jubalaudio.ui.components.common.IconPulseEffect
 import com.devball.jubalaudio.ui.components.common.IconWithTooltip
-import com.devball.jubalaudio.ui.components.common.ItemInfoColumn
 import com.devball.jubalaudio.ui.components.common.SurfacedImage
+import com.devball.jubalaudio.ui.components.common.WeightedColumn
 
 @Composable
 fun StaleUriListItem(
@@ -52,22 +52,22 @@ fun StaleUriListItem(
         )
 
         //Media Item Info
-        ItemInfoColumn(
-            line1 = { Text(
+        WeightedColumn {
+            Text(
                 text = media.title,
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
                 modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
                 color = MaterialTheme.colorScheme.error
-            ) },
-            line2 = { Text(
+            )
+            Text(
                 text = media.creator,
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
                 color = MaterialTheme.colorScheme.error
-            ) }
-        )
+            )
+        }
 
         //Relink Button
         IconButton(onClick = onRelinkClick) {

@@ -1,10 +1,8 @@
 package com.devball.jubalaudio.ui.components.common
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -68,21 +66,20 @@ fun MiniPlayerBar(
             )
 
             //Title & Creator
-            ItemInfoColumn(
-                paddingValues = PaddingValues(start = 8.dp),
-                line1 = { Text(
+            WeightedColumn(paddingValues = PaddingValues(start = 8.dp)) {
+                Text(
                     text = currentMedia?.mediaMetadata?.title?.toString() ?: "Unknown Title",
                     maxLines = 1,
                     style = MaterialTheme.typography.bodyLarge,
                     overflow = TextOverflow.Ellipsis
-                ) },
-                line2 = { Text(
+                )
+                Text(
                     text = currentMedia?.mediaMetadata?.artist?.toString() ?: "Unknown Creator",
                     maxLines = 1,
                     style = MaterialTheme.typography.bodySmall,
                     overflow = TextOverflow.Ellipsis
-                ) }
-            )
+                )
+            }
 
             //Controls
             IconButton(onClick = { viewModel.seekToPrevious() }) {

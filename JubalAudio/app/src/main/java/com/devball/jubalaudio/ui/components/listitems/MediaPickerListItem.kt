@@ -12,9 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.devball.jubalaudio.data.local.MediaEntity
-import com.devball.jubalaudio.ui.components.common.ItemInfoColumn
 import com.devball.jubalaudio.ui.components.common.SelectionIcon
 import com.devball.jubalaudio.ui.components.common.SurfacedImage
+import com.devball.jubalaudio.ui.components.common.WeightedColumn
 
 @Composable
 fun MediaPickerListItem(
@@ -36,20 +36,20 @@ fun MediaPickerListItem(
         )
 
         //Media Item Info
-        ItemInfoColumn(
-            line1 = { Text(
+        WeightedColumn {
+            Text(
                 text = media.title,
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            ) },
-            line2 = { Text(
+            )
+            Text(
                 text = media.creator,
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            ) }
-        )
+            )
+        }
 
         //Checkbox
         SelectionIcon(isSelected = isSelected)

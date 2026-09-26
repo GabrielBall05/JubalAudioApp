@@ -2,6 +2,7 @@ package com.devball.jubalaudio.ui.components.common
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
@@ -11,12 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun RowScope.ItemInfoColumn(
+fun RowScope.WeightedColumn(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues = PaddingValues(horizontal = 12.dp),
-    line1: @Composable () -> Unit,
-    line2: @Composable (() -> Unit)? = null,
-    line3: @Composable (() -> Unit)? = null
+    content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = modifier
@@ -25,8 +24,6 @@ fun RowScope.ItemInfoColumn(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.Start
     ) {
-        line1()
-        line2?.let { line2() }
-        line3?.let { line3() }
+        content()
     }
 }
