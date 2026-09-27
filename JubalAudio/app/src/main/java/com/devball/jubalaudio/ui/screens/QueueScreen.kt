@@ -137,12 +137,9 @@ fun QueueScreen(
                 key = { _, item -> item.mediaId }
             ) { index, item ->
                 ReorderableItem(reorderableManualQueueListState, key = item.mediaId) { isDragging ->
-                    //val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp) //TODO: Implementt
-
+                    //TODO: Implement dragging indicator (elevation perhaps)
                     SwipeDismissable(
-                        modifier = Modifier
-                            //.shadow(elevation) //TODO: Implement
-                            .animateItem(),
+                        modifier = Modifier.animateItem(),
                         onDismiss = { onRemoveItemAtIndex(index, true) },
                         background = { SwipeDismissableBackground(
                             imageVector = Icons.Default.DeleteOutline,
@@ -179,12 +176,9 @@ fun QueueScreen(
                 key = { _, item -> item.mediaId }
             ) { index, item ->
                 ReorderableItem(reorderableUpNextListState, key = item.mediaId) { isDragging ->
-                    //val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp) //TODO: Implement
-
+                    //TODO: Implement dragging indicator (elevation perhaps)
                     SwipeDismissable(
-                        modifier = Modifier
-                            //.shadow(elevation) //TODO: Implement
-                            .animateItem(),
+                        modifier = Modifier.animateItem(),
                         onDismiss = { onRemoveItemAtIndex(index, false) },
                         background = { SwipeDismissableBackground(
                             imageVector = Icons.Default.DeleteOutline,

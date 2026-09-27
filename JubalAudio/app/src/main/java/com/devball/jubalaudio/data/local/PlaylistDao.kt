@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.Update
 import androidx.room.Query
 import androidx.room.OnConflictStrategy
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -98,6 +99,18 @@ interface PlaylistDao {
         HAVING COUNT(DISTINCT PMI.mediaId) < (:size)
     """)
     suspend fun getPlaylistsNotHavingMediaList(mediaIds: List<Int>, size: Int = mediaIds.size): List<PlaylistEntity>
+
+    @Query("DELETE FROM ${PlaylistMediaItem.TABLE_NAME} WHERE playlistId = :playlistId")
+    suspend fun deleteMediaFromPlaylist(playlistId: Int)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPlaylistMediaItems(items: List<PlaylistMediaItem>)
+
+    @Transaction //Run both operations atomically
+    suspend fun replacePlaylistOrder(playlistId: Int, items: List<PlaylistMediaItem>) {
+        deleteMediaFromPlaylist(playlistId)
+        insertPlaylistMediaItems(items)
+    }
 
     //Get playlist item count
     @Query("SELECT COUNT(*) FROM ${PlaylistMediaItem.TABLE_NAME} WHERE playlistId = :playlistId")

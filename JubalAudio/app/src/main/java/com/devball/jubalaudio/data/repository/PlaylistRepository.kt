@@ -61,6 +61,17 @@ class PlaylistRepository @Inject constructor(
         playlistDao.getPlaylistsNotHavingMediaList(mediaIds.distinct())
     }
 
+    suspend fun updatePlaylistOrder(playlistId: Int, sortedMediaIds: List<Int>) = withContext(Dispatchers.IO) {
+        val updatedRefs = sortedMediaIds.mapIndexed { index, mediaId ->
+            PlaylistMediaItem(
+                playlistId = playlistId,
+                mediaId = mediaId,
+                positionInPlaylist = index + 1 // + 1 because positionInPlaylist column is 1-based not 0-based
+            )
+        }
+        if (updatedRefs.isNotEmpty()) playlistDao.replacePlaylistOrder(playlistId, updatedRefs)
+    }
+
     fun getPlaylistItemCount(playlistId: Int): Flow<Int> = playlistDao.getPlaylistItemCount(playlistId)
 
     suspend fun removeMediaFromPlaylist(mediaIds: List<Int>, playlistId: Int) = withContext(Dispatchers.IO) {

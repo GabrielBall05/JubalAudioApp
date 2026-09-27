@@ -147,16 +147,19 @@ class PlaylistDetailsViewModel @Inject constructor(
         }
     }
 
+    fun updatePlaylistOrder(sortedMediaIds: List<Int>) = launchWithoutLoading {
+        playlistRepository.updatePlaylistOrder(playlistId, sortedMediaIds)
+        sendUiEvent(UiEvent.ShowToast("Playlist Order Saved"))
+    }
+
     fun updateCreatorBulk(creator: String, ids: List<Int>) = launchWithLoading {
         mediaRepository.updateCreatorBulk(creator, ids)
         sendUiEvent(UiEvent.ShowToast("${ids.size} item${if (ids.size > 1) "s" else ""} updated"))
-
     }
 
     fun updateArtworkBulk(artworkUri: String?, ids: List<Int>) = launchWithLoading {
         mediaRepository.updateArtworkBulk(artworkUri, ids) //Perform db update
         sendUiEvent(UiEvent.ShowToast("${ids.size} item${if (ids.size > 1) "s" else ""} updated"))
-
     }
 
     fun addMediaToPlaylists(mediaIds: List<Int>, playlistIds: List<Int>) = launchWithLoading {

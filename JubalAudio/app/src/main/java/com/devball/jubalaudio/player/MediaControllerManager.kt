@@ -78,6 +78,9 @@ class MediaControllerManager @Inject constructor(
 
     //Copy of the original playlist populated the moment a playlist starts playing
     private var originalPlaylist: List<MediaItem> = emptyList()
+        set(value) {
+            field = value.distinctBy { it.mediaId }
+        }
 
     //State for broadcasting error messages that may occur here
     private val _errorMessage = Channel<String>(Channel.BUFFERED)
@@ -182,23 +185,27 @@ class MediaControllerManager @Inject constructor(
         if (mediaItems.isEmpty()) return
         val player = controller ?: return
 
-        //Make copy of full playlist
+        //Make copy of full playlist (automatically remove duplicates)
         originalPlaylist = mediaItems
+
+        //Use clean list
+        val items = originalPlaylist
+
         //Apply states
         _currentPlaylistId.value = playlistId
         _isShuffling.value = startShuffled
 
-        val startAtSpecific = startItemIndex >= 0
+        val startAtSpecific = startItemIndex >= 0 && startItemIndex < items.size
         val finalTimeline: List<MediaItem>
         val playIndex: Int
 
         //If shuffle is ON:
         if (startShuffled) {
             //Set first item to desired start item if applicable, otherwise choose random item
-            val startIndex = if (startAtSpecific) startItemIndex else mediaItems.indices.random()
-            val startingItem = mediaItems[startIndex]
+            val startIndex = if (startAtSpecific) startItemIndex else items.indices.random()
+            val startingItem = items[startIndex]
             //Shuffle remaining items
-            val remaining = mediaItems.filterIndexed { index, _ -> index != startIndex }.shuffled()
+            val remaining = items.filterIndexed { index, _ -> index != startIndex }.shuffled()
 
             //Set timeline to newly shuffled list
             finalTimeline = listOf(startingItem) + remaining
@@ -208,7 +215,7 @@ class MediaControllerManager @Inject constructor(
         //If shuffle is OFF:
         else {
             //Set timeline to full, ordered playlist
-            finalTimeline = mediaItems
+            finalTimeline = items
             //Start at desired start item if applicable, otherwise start at beginning
             playIndex = if (startAtSpecific) startItemIndex else 0
         }

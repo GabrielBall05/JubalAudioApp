@@ -1,6 +1,7 @@
 package com.devball.jubalaudio.ui.screens
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -9,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,11 +37,14 @@ import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.PlaylistRemove
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -81,6 +86,8 @@ import com.devball.jubalaudio.ui.components.optionsheets.PlaylistSheetAction
 import com.devball.jubalaudio.ui.viewmodels.PlaylistDetailsViewModel
 import com.devball.jubalaudio.util.ObserveUiEvents
 import com.devball.jubalaudio.util.SwipeDismissable
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 private enum class TopBarState {
     Reordering, Selecting, Standard
@@ -122,6 +129,12 @@ fun PlaylistDetailsScreen(
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val listState = rememberLazyListState()
+    var localReorderList by remember { mutableStateOf<List<MediaEntity>>(emptyList()) }
+    val reorderableState = rememberReorderableLazyListState(listState) { from, to ->
+        localReorderList = localReorderList.toMutableList().apply {
+            add(to.index, removeAt(from.index))
+        }
+    }
     val mediaMap = remember(mediaList) { mediaList.associateBy { it.mediaId } }
 
     var isReordering by rememberSaveable { mutableStateOf(false) }
@@ -154,6 +167,11 @@ fun PlaylistDetailsScreen(
             listState.scrollToItem(0)
         }
     }
+
+    //Clean up local reordering list when exiting reordering mode
+    LaunchedEffect(isReordering) { if (!isReordering) localReorderList = emptyList() }
+    //Back should cancel reordering
+    BackHandler(enabled = isReordering) { isReordering = false }
 
     //Fetch media not in playlist when picker is shown
     LaunchedEffect(showMediaPicker) {
@@ -249,18 +267,32 @@ fun PlaylistDetailsScreen(
                 }
             ) { targetState ->
                 when (targetState) {
-                    //Reordering = Show Done Button
+                    //Reordering = Show Buttons for Reordering Mode
                     TopBarState.Reordering -> {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 32.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Button(
+                            //Cancel Button
+                            OutlinedButton(
                                 onClick = { isReordering = false },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 32.dp)
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                                border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
+                            ) { Text(text = "Cancel", style = MaterialTheme.typography.titleMedium) }
+
+                            //Done Button
+                            Button(
+                                onClick = {
+                                    if (localReorderList.isNotEmpty()) {
+                                        viewModel.updatePlaylistOrder(localReorderList.map { it.mediaId })
+                                    }
+                                    isReordering = false
+                                },
+                                modifier = Modifier.weight(1f)
                             ) { Text(text = "Done", style = MaterialTheme.typography.titleMedium) }
                         }
                     }
@@ -348,31 +380,17 @@ fun PlaylistDetailsScreen(
                 } else if (isReordering) {
                     //Use reorderable list item with the full media list
                     itemsIndexed(
-                        items = fullMediaList,
+                        items = localReorderList,
                         key = { _, media -> media.mediaId }
                     ) { index, media ->
-                        MediaListItemReorderable(
-                            modifier = Modifier.animateItem(),
-                            media = media,
-                            isFirst = index == 0,
-                            isLast = index == fullMediaList.size - 1,
-                            onMoveUp = {
-                                if (index > 0) {
-                                    viewModel.moveMediaItemPosition(
-                                        media.mediaId,
-                                        fullMediaList[index - 1].mediaId
-                                    )
-                                }
-                            },
-                            onMoveDown = {
-                                if (index < fullMediaList.size - 1) {
-                                    viewModel.moveMediaItemPosition(
-                                        media.mediaId,
-                                        fullMediaList[index + 1].mediaId
-                                    )
-                                }
-                            }
-                        )
+                        ReorderableItem(reorderableState, key = media.mediaId) { isDragging ->
+                            //TODO: Implement dragging indicator (elevation perhaps)
+                            MediaListItemReorderable(
+                                modifier = Modifier.animateItem(),
+                                dragHandleModifier = Modifier.draggableHandle(),
+                                media = media,
+                            )
+                        }
                     }
                 } else {
                     //Use regular or selectable list item with the filtered list
@@ -444,6 +462,7 @@ fun PlaylistDetailsScreen(
                         onAddToQueueClick(fullMediaList)
                     },
                     PlaylistSheetAction(PlaylistOption.REORDER) {
+                        localReorderList = fullMediaList //Prep list before composition
                         isReordering = true
                     },
                     PlaylistSheetAction(PlaylistOption.ADD_MEDIA) {

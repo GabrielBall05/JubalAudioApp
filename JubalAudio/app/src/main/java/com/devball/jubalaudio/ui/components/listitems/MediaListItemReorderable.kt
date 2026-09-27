@@ -1,9 +1,12 @@
 package com.devball.jubalaudio.ui.components.listitems
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Icon
@@ -23,16 +26,13 @@ import com.devball.jubalaudio.ui.components.common.WeightedColumn
 @Composable
 fun MediaListItemReorderable(
     modifier: Modifier = Modifier,
+    dragHandleModifier: Modifier = Modifier,
     media: MediaEntity,
-    isFirst: Boolean,
-    isLast: Boolean,
-    onMoveUp: () -> Unit,
-    onMoveDown: () -> Unit
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 12.dp, top = 2.dp, end = 8.dp, bottom = 2.dp),
+            .padding(horizontal = 12.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         //Artwork
@@ -57,26 +57,18 @@ fun MediaListItemReorderable(
             )
         }
 
-        //Reorder Buttons
-        IconButton(
-            onClick = onMoveUp,
-            enabled = !isFirst,
-            colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary,
-                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-            )
+        //Drag Handle
+        Box(
+            modifier = dragHandleModifier
+                .size(48.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = "Move Up")
-        }
-        IconButton(
-            onClick = onMoveDown,
-            enabled = !isLast,
-            colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary,
-                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            Icon(
+                imageVector = Icons.Default.DragHandle,
+                contentDescription = "Drag to reorder",
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        ) {
-            Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = "Move Down")
         }
     }
 }

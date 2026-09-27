@@ -25,7 +25,7 @@ import androidx.media3.common.MediaItem
 import com.devball.jubalaudio.ui.components.common.SurfacedImage
 import com.devball.jubalaudio.ui.components.common.WeightedColumn
 
-val QueueItemPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
+val QueueItemPadding = PaddingValues(start = 16.dp, top = 4.dp, end = 24.dp, bottom = 4.dp)
 val QueueItemImageSize = 50.dp
 
 @Composable
@@ -74,9 +74,7 @@ fun QueueItem(
             Icon(
                 imageVector = Icons.Default.DragHandle,
                 contentDescription = "Reorder",
-                modifier = dragHandleModifier
-                    .padding(8.dp)
-                    .size(24.dp),
+                modifier = dragHandleModifier.size(24.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
