@@ -1,5 +1,7 @@
 TODO:
 
+push update asap (completed: drag and drop + player pager + minor bug fixes)
+announce update in group (and testers community?)
 improve mediapicker
 improve viewmodels
 
