@@ -1,6 +1,9 @@
 TODO:
 
-widget onclick opens expandedplayer - if player is empty, just open app
+
+move all custom logic to forwarding player
+widget test layouts on phones (most importantly 4x1)
+widget increase image size
 improve mediapicker
 improve viewmodels
 

@@ -18,6 +18,7 @@ import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.action.ActionParameters
+import androidx.glance.action.action
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.ActionCallback
@@ -40,6 +41,7 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import androidx.media3.session.MediaController
 import coil3.ImageLoader
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
@@ -102,7 +104,8 @@ class PlayerWidget : GlanceAppWidget() {
                 Column(
                     modifier = GlanceModifier
                         .defaultWeight()
-                        .padding(start = if (imageBitmap != null) 8.dp else 0.dp)
+                        .padding(start = if (imageBitmap != null) 8.dp else 0.dp),
+                    verticalAlignment = Alignment.Vertical.CenterVertically
                 ) {
                     Text(
                         text = title,
@@ -113,9 +116,9 @@ class PlayerWidget : GlanceAppWidget() {
                         ),
                         maxLines = 1,
                     )
-                    if (artist.isNotEmpty()) {
+                    if (title != "Not Playing") {
                         Text(
-                            text = artist,
+                            text = artist.ifEmpty { "Unknown Artist" },
                             style = TextStyle(
                                 color = GlanceTheme.colors.onSurfaceVariant,
                                 fontSize = 14.sp
@@ -178,48 +181,59 @@ class PlayerWidget : GlanceAppWidget() {
 
 class OpenPlayerActionCallback : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-        val intent = Intent(context, MainActivity::class.java).apply {
-            //Apply flags to bring the existing app to the foreground
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_SINGLE_TOP
+        executeWithController(context) { controller ->
+            val intent = Intent(context, MainActivity::class.java).apply {
+                //Apply flags to bring the existing app to the foreground
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP
 
-            //Open player screen if the player is not empty
-            if (getMediaControllerManager(context).currentMediaItem.value != null) {
-                putExtra("ACTION_OPEN_PLAYER", true)
+                //Open player screen if the player is not empty
+                if ((controller?.mediaItemCount ?: 0) > 0) {
+                    putExtra("ACTION_OPEN_PLAYER", true)
+                }
             }
-        }
 
-        //Launch the Intent
-        context.startActivity(intent)
+            //Launch the Intent
+            context.startActivity(intent)
+        }
     }
 }
 
 class PlayPauseActionCallback : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-        withContext(Dispatchers.Main) {
-            getMediaControllerManager(context).togglePlayPause()
+        executeWithController(context) { controller ->
+            controller ?: return@executeWithController //Early exit if null
+            if (controller.isPlaying) controller.pause() else controller.play()
         }
     }
 }
 
 class PreviousActionCallback : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-        withContext(Dispatchers.Main) {
-            getMediaControllerManager(context).seekToPrevious(true)
-        }
+        executeWithController(context) { it?.seekToPreviousMediaItem() }
     }
 }
 
 class NextActionCallback : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-        withContext(Dispatchers.Main) {
-            getMediaControllerManager(context).seekToNext()
-        }
+        executeWithController(context) { it?.seekToNextMediaItem() }
     }
 }
 
+private suspend fun executeWithController(
+    context: Context,
+    action: (MediaController?) -> Unit
+) {
+    //Wait for controller connection on background thread
+    val controller = getMediaControllerManager(context).awaitController()
+
+    //Switch to Main thread to execute ExoPlayer and UI/Intent actions
+    withContext(Dispatchers.Main) { action(controller) }
+}
+
 private fun getMediaControllerManager(context: Context): MediaControllerManager {
+    //Returns the MediaControllerManager Singleton instance
     return EntryPointAccessors.fromApplication(
         context = context.applicationContext,
         entryPoint = WidgetEntryPoint::class.java
