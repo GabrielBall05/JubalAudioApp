@@ -1,5 +1,6 @@
 package com.devball.jubalaudio
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,6 +29,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -61,9 +63,16 @@ import com.devball.jubalaudio.util.ObserveUiEvents
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    //For tracking the "Open Player" signal from PlayerWidget
+    private val _shouldOpenPlayer = mutableStateOf(false)
+
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        checkIntent(intent)
+
         enableEdgeToEdge()
 
         @Suppress("DEPRECATION")
@@ -80,16 +89,36 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen()
+                    MainScreen(
+                        openPlayerTrigger = _shouldOpenPlayer.value,
+                        onTriggerConsumed = {
+                            _shouldOpenPlayer.value = false
+                        }
+                    )
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        checkIntent(intent)
+    }
+
+    private fun checkIntent(intent: Intent?) {
+        if (intent?.getBooleanExtra("ACTION_OPEN_PLAYER", false) == true) {
+            _shouldOpenPlayer.value = true
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(mainViewModel: MainViewModel = hiltViewModel()) {
+fun MainScreen(
+    mainViewModel: MainViewModel = hiltViewModel(),
+    openPlayerTrigger: Boolean,
+    onTriggerConsumed: () -> Unit
+) {
     //Ui Event Observer
     ObserveUiEvents(eventFlow = mainViewModel.uiEvent)
 
@@ -102,6 +131,14 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel()) {
     //State for ExpandedPlayerScreen Sheet
     var showExpandedPlayerSheet by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    //Listen for open player trigger from the intent created by PlayerWidget
+    LaunchedEffect(openPlayerTrigger) {
+        if (openPlayerTrigger) {
+            showExpandedPlayerSheet = true
+            onTriggerConsumed()
+        }
+    }
 
     val isPlaying by mainViewModel.isPlaying.collectAsStateWithLifecycle()
     val activePlaylistId by mainViewModel.currentPlaylistId.collectAsStateWithLifecycle()

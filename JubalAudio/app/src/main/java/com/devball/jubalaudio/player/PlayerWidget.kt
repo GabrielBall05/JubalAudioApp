@@ -1,6 +1,7 @@
 package com.devball.jubalaudio.player
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -43,6 +44,7 @@ import coil3.ImageLoader
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.toBitmap
+import com.devball.jubalaudio.MainActivity
 import com.devball.jubalaudio.R
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
@@ -59,8 +61,6 @@ class PlayerWidget : GlanceAppWidget() {
             val title = prefs[TitleKey] ?: "Not Playing"
             val artist = prefs[ArtistKey] ?: ""
             val isPlaying = prefs[IsPlayingKey] ?: false
-
-            //TODO: IMAGE
 
             //Asynchronously load and downscale image URI into a Bitmap
             val imageBitmap by produceState<Bitmap?>(initialValue = null, key1 = imageUriString) {
@@ -82,7 +82,8 @@ class PlayerWidget : GlanceAppWidget() {
                 modifier = GlanceModifier
                     .fillMaxSize()
                     .background(GlanceTheme.colors.surface)
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .clickable(actionRunCallback<OpenPlayerActionCallback>()),
                 verticalAlignment = Alignment.Vertical.CenterVertically
             ) {
                 //Image
@@ -112,14 +113,16 @@ class PlayerWidget : GlanceAppWidget() {
                         ),
                         maxLines = 1,
                     )
-                    Text(
-                        text = artist,
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 14.sp
-                        ),
-                        maxLines = 1
-                    )
+                    if (artist.isNotEmpty()) {
+                        Text(
+                            text = artist,
+                            style = TextStyle(
+                                color = GlanceTheme.colors.onSurfaceVariant,
+                                fontSize = 14.sp
+                            ),
+                            maxLines = 1
+                        )
+                    }
                 }
 
                 //Playback Controls
@@ -173,8 +176,24 @@ class PlayerWidget : GlanceAppWidget() {
 }
 
 
-//TODO: Make a callback for clicking the entire widget to open the app into the expanded player screen
+class OpenPlayerActionCallback : ActionCallback {
+    override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            //Apply flags to bring the existing app to the foreground
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP
 
+            //Open player screen if the player is not empty
+            if (getMediaControllerManager(context).currentMediaItem.value != null) {
+                putExtra("ACTION_OPEN_PLAYER", true)
+            }
+        }
+
+        //Launch the Intent
+        context.startActivity(intent)
+    }
+}
 
 class PlayPauseActionCallback : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
