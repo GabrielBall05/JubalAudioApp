@@ -3,6 +3,10 @@ package com.devball.jubalaudio.player
 import android.content.ComponentName
 import android.content.Context
 import android.util.Log
+import androidx.compose.foundation.gestures.forEach
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
@@ -20,9 +24,11 @@ import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -41,6 +47,9 @@ class MediaControllerManager @Inject constructor(
     private var controllerFuture: ListenableFuture<MediaController>? = null
     var controller: MediaController? = null
         private set
+
+    //For App Widget
+    private val widgetScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     //Playback metadata / states for UI
     private val _currentMediaItem = MutableStateFlow<MediaItem?>(null)
@@ -89,6 +98,7 @@ class MediaControllerManager @Inject constructor(
 
     init {
         setupController() //Set up controller connection and add listeners
+        observePlaybackStateForWidget() //Always update current state for widget
     }
 
     fun updateCurrentPosition() { //For UI to display duration
@@ -672,6 +682,40 @@ class MediaControllerManager @Inject constructor(
             MediaController.releaseFuture(it)
             controllerFuture = null
             controller = null
+        }
+    }
+
+    //Expose current player states for the player widget
+    private fun observePlaybackStateForWidget() {
+        widgetScope.launch {
+            combine(currentMediaItem, isPlaying) { mediaItem, playing ->
+                //TODO: HANDLE BITMAPPING A LOW RES IMAGE
+                val artworkUriString = mediaItem?.mediaMetadata?.artworkUri?.toString() ?: ""
+                val title = mediaItem?.mediaMetadata?.title?.toString() ?: "Not Playing"
+                val artist = mediaItem?.mediaMetadata?.artist?.toString() ?: ""
+
+                //Perform Disk IO snapshot operations over background thread
+                withContext(Dispatchers.IO) {
+                    val glanceManager = GlanceAppWidgetManager(context)
+                    val glanceIds = glanceManager.getGlanceIds(PlayerWidget::class.java)
+                    val widgetInstance = PlayerWidget()
+
+                    //Update DataStore values
+                    glanceIds.forEach { glanceId ->
+                        updateAppWidgetState(context,
+                            PreferencesGlanceStateDefinition, glanceId) { prefs ->
+                            prefs.toMutablePreferences().apply {
+                                this[PlayerWidget.ImageUriKey] = artworkUriString
+                                this[PlayerWidget.TitleKey] = title
+                                this[PlayerWidget.ArtistKey] = artist
+                                this[PlayerWidget.IsPlayingKey] = playing
+                            }
+                        }
+                        //Inform the widget view configuration to invalidate layout graphics
+                        widgetInstance.update(context, glanceId)
+                    }
+                }
+            }.collect {}
         }
     }
 }

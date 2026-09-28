@@ -78,6 +78,10 @@ dependencies {
     //Reorderable (Drag-and-Drop Lists)
     implementation(libs.reorderable)
 
+    //Glance (App Widgets)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+
     //Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
