@@ -200,18 +200,9 @@ class MainViewModel @Inject constructor(
     private fun startPlaybackTicker() {
         playbackJob?.cancel() //Clear any existing job
         playbackJob = viewModelScope.launch {
-            var tickCount = 0
             while (true) {
                 controllerManager.updateCurrentPosition()
-
-                //Every 5 seconds, save current position
-                tickCount++
-                if (tickCount >= 10) {
-                    controllerManager.savePositionOnly()
-                    tickCount = 0
-                }
-
-                delay(500L) //Tick every 500ms
+                delay(500L) //Tick every 500ms (2 tps)
             }
         }
     }

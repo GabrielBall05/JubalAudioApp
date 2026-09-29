@@ -35,8 +35,7 @@ import javax.inject.Singleton
 @Singleton
 class MediaControllerManager @Inject constructor(
     private val persistenceRepository: PlaybackPersistenceRepository,
-    private val playlistRepository: PlaylistRepository,
-    private val settingsRepository: SettingsRepository,
+    private val playbackStateStore: PlaybackStateStore,
     @param:ApplicationContext private val context: Context
 ) {
     //Controller setup / instance: Manages asynchronous connection to ExoPlayer and holds active reference
@@ -61,8 +60,7 @@ class MediaControllerManager @Inject constructor(
     val duration = _duration.asStateFlow()
 
     //States for playback modes for UI
-    private val _isShuffling = MutableStateFlow(false)
-    val isShuffling = _isShuffling.asStateFlow()
+    val isShuffling = playbackStateStore.isShuffling
 
     private val _repeatingCurrent = MutableStateFlow(false)
     val repeatingCurrent = _repeatingCurrent.asStateFlow()
@@ -75,13 +73,13 @@ class MediaControllerManager @Inject constructor(
     val upNextState = _upNextState.asStateFlow()
 
     //Current playlist state for UI if applicable
-    private val _currentPlaylistId = MutableStateFlow<Int?>(null)
-    val currentPlaylistId = _currentPlaylistId.asStateFlow()
+    val currentPlaylistId = playbackStateStore.currentPlaylistId
 
     //Copy of the original playlist populated the moment a playlist starts playing
-    private var originalPlaylist: List<MediaItem> = emptyList()
-        set(value) {
-            field = value.distinctBy { it.mediaId }
+    var originalPlaylist: List<MediaItem>
+        get() = playbackStateStore.originalPlaylist
+        private set(value) {
+            playbackStateStore.originalPlaylist = value
         }
 
     //State for broadcasting error messages that may occur here
@@ -155,7 +153,7 @@ class MediaControllerManager @Inject constructor(
         val player = controller ?: return
         if (originalPlaylist.isEmpty() || player.mediaItemCount == 0) return
 
-        _isShuffling.value = !_isShuffling.value //Toggle state
+        playbackStateStore.toggleShuffle() //Toggle state in Store
 
         //Get current index, current size of manual queue, and current start index for up next (after manual queue)
         val currentIndex = player.currentMediaItemIndex
@@ -171,7 +169,7 @@ class MediaControllerManager @Inject constructor(
         }
 
         //Turning shuffle ON: New up next list becomes remaining up next list shuffled
-        val newUpNext = if (_isShuffling.value) currentUpNext.shuffled()
+        val newUpNext = if (isShuffling.value) currentUpNext.shuffled()
         //Turning shuffle OFF: New up next list becomes natural order based on originalPlaylist
         else {
             //Sort current up next by its index in originalPlaylist
@@ -205,49 +203,20 @@ class MediaControllerManager @Inject constructor(
         if (mediaItems.isEmpty()) return
         val player = controller ?: return
 
-        //Make copy of full playlist (automatically remove duplicates)
-        originalPlaylist = mediaItems
-
-        //Use clean list
-        val items = originalPlaylist
-
-        //Apply states
-        _currentPlaylistId.value = playlistId
-        _isShuffling.value = startShuffled
-
-        val startAtSpecific = startItemIndex >= 0 && startItemIndex < items.size
-        val finalTimeline: List<MediaItem>
-        val playIndex: Int
-
-        //If shuffle is ON:
-        if (startShuffled) {
-            //Set first item to desired start item if applicable, otherwise choose random item
-            val startIndex = if (startAtSpecific) startItemIndex else items.indices.random()
-            val startingItem = items[startIndex]
-            //Shuffle remaining items
-            val remaining = items.filterIndexed { index, _ -> index != startIndex }.shuffled()
-
-            //Set timeline to newly shuffled list
-            finalTimeline = listOf(startingItem) + remaining
-            //Start at beginning
-            playIndex = 0
-        }
-        //If shuffle is OFF:
-        else {
-            //Set timeline to full, ordered playlist
-            finalTimeline = items
-            //Start at desired start item if applicable, otherwise start at beginning
-            playIndex = if (startAtSpecific) startItemIndex else 0
-        }
+        //Prepare final timeline with shared prep logic from Store
+        val (finalTimeline, playIndex) = playbackStateStore.preparePlaylistTimeline(
+            mediaItems = mediaItems,
+            playlistId = playlistId,
+            startItemIndex = startItemIndex,
+            startShuffled = startShuffled
+        )
 
         //Apply timeline to ExoPlayer
         player.setMediaItems(finalTimeline)
         //Seek to specified start item
         player.seekTo(playIndex, 0L)
         player.prepare()
-        player.play() //Start playing
-
-        saveCurrentStateToDisk() //Save new information
+        player.play()
     }
 
     //Add items to manual queue
@@ -404,9 +373,6 @@ class MediaControllerManager @Inject constructor(
                         _currentMediaItem.value = mediaItem
                         _duration.value = player.duration.coerceAtLeast(0L)
 
-                        //Remove all past manual queue items
-                        consumePastQueueItems(player)
-
                         //Update all UI states to sync with ExoPlayer's timeline
                         updateUIStates(player)
                     }
@@ -414,12 +380,8 @@ class MediaControllerManager @Inject constructor(
                     //Executes when ExoPlayer's timeline changes
                     override fun onTimelineChanged(timeline: Timeline, reason: Int) {
                         super.onTimelineChanged(timeline, reason)
-
                         //Update all UI states to sync with ExoPlayer's timeline
                         updateUIStates(player)
-
-                        //Whenever timeline changes, save it
-                        saveCurrentStateToDisk()
                     }
 
                     //Executes whenever playing state changes
@@ -437,40 +399,10 @@ class MediaControllerManager @Inject constructor(
                     //Executes whenever playback state changes
                     override fun onPlaybackStateChanged(playbackState: Int) {
                         super.onPlaybackStateChanged(playbackState)
-
                         //Update duration if player is able to play
                         if (playbackState == Player.STATE_READY) {
                             _duration.value = player.duration.coerceAtLeast(0L)
                         }
-
-                        //If end of timeline has been reached and infinite playback setting is on, repeat original playlist
-                        if (playbackState == Player.STATE_ENDED) _currentPlaylistId.value?.let { playlistId ->
-                            CoroutineScope(Dispatchers.IO).launch { //Use IO thread
-                                //Only continue if infinite playlist setting is on
-                                if (settingsRepository.infinitePlaybackFlow.first()) {
-                                    //Fetch updated playlist list from Room database
-                                    val freshItems = playlistRepository.fetchPlaylistMediaList(playlistId).map { it.toMediaItem() }
-                                    if (freshItems.isNotEmpty()) {
-                                        //Switch back to Main thread for MediaControllerManager operations
-                                        withContext(Dispatchers.Main) {
-                                            //Reuse playPlaylist and use current values
-                                            playPlaylist(
-                                                mediaItems = freshItems,
-                                                playlistId = playlistId,
-                                                startItemIndex = -1,
-                                                startShuffled = _isShuffling.value
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    //Executes when the player's position changes (ex: transitioning, seeking, or discontinuity occurs)
-                    override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
-                        super.onPositionDiscontinuity(oldPosition, newPosition, reason)
-                        saveCurrentStateToDisk() //Save whenever a new item is jumped to
                     }
 
                     //Executes when a player error occurs
@@ -483,34 +415,13 @@ class MediaControllerManager @Inject constructor(
                             || error.errorCode == PlaybackException.ERROR_CODE_IO_NO_PERMISSION
                             || error.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED
                         ) {
-                            //Get current item, its title (name), and actual mediaId
-                            val currentItem = player.currentMediaItem
-                            val failedItemTitle: String? = player.currentMediaItem?.mediaMetadata?.title?.toString()
-                            val failedMediaId = currentItem?.mediaMetadata?.extras?.getString("ORIGINAL_MEDIA_ID")
-                                ?: currentItem?.mediaId
-
                             //Send error message (UI event)
+                            val failedItemTitle: String? = player.currentMediaItem?.mediaMetadata?.title?.toString()
                             CoroutineScope(Dispatchers.Main).launch {
                                 _errorMessage.send(element =
                                     if (failedItemTitle != null) "File not found or unavailable for '$failedItemTitle.'"
                                     else "File not found or unavailable."
                                 )
-                            }
-
-                            //Remove broken item from originalPlaylist list so it doesn't end up in timeline again
-                            originalPlaylist = originalPlaylist.filter { it.mediaId != failedMediaId }
-
-                            //Remove all instances of this broken item from the timeline
-                            for (i in player.mediaItemCount - 1 downTo 0) {
-                                val item = player.getMediaItemAt(i)
-                                val itemId = item.mediaMetadata.extras?.getString("ORIGINAL_MEDIA_ID") ?: item.mediaId
-                                if (itemId == failedMediaId) player.removeMediaItem(i) //Perform removal
-                            }
-
-                            //Play the next item (next item automatically becomes the new current after removing the broken item)
-                            if (player.mediaItemCount > 0) {
-                                player.prepare()
-                                player.play()
                             }
                         }
                     }
@@ -527,7 +438,6 @@ class MediaControllerManager @Inject constructor(
             }
         }, MoreExecutors.directExecutor())
     }
-
 
     //Rebuild UI lists dynamically based on ExoPlayer's timeline.
     private fun updateUIStates(player: Player) {
@@ -561,21 +471,6 @@ class MediaControllerManager @Inject constructor(
             else null
     }
 
-    //Erase all manual queue items from timeline BEFORE current item
-    private fun consumePastQueueItems(player: Player) {
-        val currentIndex = player.currentMediaItemIndex
-        if (currentIndex == C.INDEX_UNSET) return
-
-        //Iterate backwards from right behind the current item down to the beginning of the timeline
-        for (i in currentIndex - 1 downTo 0) {
-            val item = player.getMediaItemAt(i)
-            //Remove item from timeline if it is a manual queue item (consume it)
-            if (item.mediaMetadata.extras?.getBoolean("IS_MANUAL_QUEUE") == true) {
-                player.removeMediaItem(i) //Perform removal
-            }
-        }
-    }
-
     //Rebuild timeline with saved playback state (upon app launch)
     fun restorePlaybackState() {
         val player = controller ?: return
@@ -592,8 +487,8 @@ class MediaControllerManager @Inject constructor(
             if (timelineItems.isNotEmpty()) {
                 //Update lists and states
                 originalPlaylist = originalItems
-                _currentPlaylistId.value = meta.playlistId
-                _isShuffling.value = meta.isShuffling
+                playbackStateStore.setPlaylistId(meta.playlistId)
+                playbackStateStore.setShuffling(meta.isShuffling)
                 _repeatingCurrent.value = meta.repeatingCurrent
                 _currentPosition.value = meta.position
 
@@ -610,53 +505,6 @@ class MediaControllerManager @Inject constructor(
                 //Immediately force UI updates
                 updateUIStates(player)
             }
-        }
-    }
-
-    //Save all current player data (timeline, states, lists) to disk
-    private fun saveCurrentStateToDisk() {
-        val player = controller ?: return
-
-        //Capture snapshot on Main thread
-        val position = player.currentPosition
-        val index = player.currentMediaItemIndex
-        val isShuffling = _isShuffling.value
-        val isRepeating = player.repeatMode == Player.REPEAT_MODE_ONE
-        val playlistId = _currentPlaylistId.value
-        val originalCopy = originalPlaylist.toList()
-
-        //Extract timeline items
-        val timelineItems = mutableListOf<MediaItem>()
-        for (i in 0 until player.mediaItemCount) {
-            timelineItems.add(player.getMediaItemAt(i))
-        }
-
-        //Pass snapshot to IO thread
-        CoroutineScope(Dispatchers.IO).launch {
-            persistenceRepository.savePlaybackState(
-                position = position,
-                index = index,
-                isShuffling = isShuffling,
-                isRepeating = isRepeating,
-                playlistId = playlistId,
-                timelineItems = timelineItems,
-                originalItems = originalCopy
-            )
-        }
-    }
-
-    //Save just the position (index and duration) to disk
-    fun savePositionOnly() {
-        val player = controller ?: return
-        if (!player.isPlaying) return
-
-        //Capture snapshot on main thread
-        val index = player.currentMediaItemIndex
-        val position = player.currentPosition
-
-        //Perform save on IO thread
-        CoroutineScope(Dispatchers.IO).launch {
-            persistenceRepository.savePlaybackPosition(index, position)
         }
     }
 
@@ -678,7 +526,7 @@ class MediaControllerManager @Inject constructor(
         _manualQueueState.value = emptyList()
         _upNextState.value = emptyList()
         originalPlaylist = emptyList()
-        _currentPlaylistId.value = null
+        playbackStateStore.setPlaylistId(null)
 
         //Clear the disk's saved state so it doesn't get rebuilt on app launch
         CoroutineScope(Dispatchers.IO).launch { //Perform on IO thread
