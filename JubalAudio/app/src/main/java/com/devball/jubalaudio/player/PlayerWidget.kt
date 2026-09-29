@@ -32,6 +32,7 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
+import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
@@ -84,7 +85,7 @@ class PlayerWidget : GlanceAppWidget() {
                 modifier = GlanceModifier
                     .fillMaxSize()
                     .background(GlanceTheme.colors.surface)
-                    .padding(horizontal = 16.dp)
+                    .padding(16.dp)
                     .clickable(actionRunCallback<OpenPlayerActionCallback>()),
                 verticalAlignment = Alignment.Vertical.CenterVertically
             ) {
@@ -93,8 +94,8 @@ class PlayerWidget : GlanceAppWidget() {
                     Image(
                         provider = ImageProvider(bitmap),
                         modifier = GlanceModifier
-                            .size(48.dp)
-                            .cornerRadius(4.dp)
+                            .size(64.dp)
+                            .cornerRadius(8.dp)
                             .background(GlanceTheme.colors.surfaceVariant),
                         contentDescription = "Artwork Image"
                     )
