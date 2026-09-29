@@ -166,83 +166,10 @@ class PlaybackService() : MediaSessionService() {
         }
     }
 
-    private fun restartPlaylistNatively(mediaItems: List<MediaItem>, playlistId: Int, startShuffled: Boolean) {
-        //Prepare final timeline with shared prep logic from Store
-        val (finalTimeline, playIndex) = playbackStateStore.preparePlaylistTimeline(
-            mediaItems = mediaItems,
-            playlistId = playlistId,
-            startItemIndex = -1,
-            startShuffled = startShuffled
-        )
-
-        //Apply timeline to ExoPlayer
-        exoPlayer.setMediaItems(finalTimeline)
-        //Seek to specified start item (always 0 in this case)
-        exoPlayer.seekTo(playIndex, 0L)
-        exoPlayer.prepare()
-        exoPlayer.play()
-    }
-
-    //Erase all manual queue items from timeline BEFORE current item
-    private fun consumePastManualQueueItems(player: Player) {
-        val currentIndex = player.currentMediaItemIndex
-        if (currentIndex == C.INDEX_UNSET) return
-
-        //Iterate backwards from right behind the current item down to the beginning of the timeline
-        for (i in currentIndex - 1 downTo 0) {
-            val item = player.getMediaItemAt(i)
-            //Remove item from timeline if it is a manual queue item (consume it)
-            if (item.mediaMetadata.extras?.getBoolean("IS_MANUAL_QUEUE") == true) {
-                player.removeMediaItem(i) //Perform removal
-            }
-        }
-    }
-
-    //Save all current player data (timeline, states, lists) to disk
-    private fun saveCurrentStateToDisk(player: Player) {
-        //Capture snapshot on Main thread
-        val position = player.currentPosition
-        val index = player.currentMediaItemIndex
-        val isShuffling = playbackStateStore.isShuffling.value
-        val isRepeating = player.repeatMode == Player.REPEAT_MODE_ONE
-        val playlistId = playbackStateStore.currentPlaylistId.value
-        val originalCopy = playbackStateStore.originalPlaylist.toList()
-
-        //Extract timeline items
-        val timelineItems = mutableListOf<MediaItem>()
-        for (i in 0 until player.mediaItemCount) {
-            timelineItems.add(player.getMediaItemAt(i))
-        }
-
-        //Pass snapshot to IO thread
-        CoroutineScope(Dispatchers.IO).launch {
-            persistenceRepository.savePlaybackState(
-                position = position,
-                index = index,
-                isShuffling = isShuffling,
-                isRepeating = isRepeating,
-                playlistId = playlistId,
-                timelineItems = timelineItems,
-                originalItems = originalCopy
-            )
-        }
-    }
-
-    //Save just the position (index and duration) to disk
-    private fun savePositionOnly(player: Player) {
-        //Capture snapshot on main thread
-        val index = player.currentMediaItemIndex
-        val position = player.currentPosition
-
-        //Perform save on IO thread
-        serviceScope.launch(Dispatchers.IO) {
-            persistenceRepository.savePlaybackPosition(index, position)
-        }
-    }
-
     override fun onCreate() {
         super.onCreate()
         initializePlayer()
+        restoreStateOnStart()
     }
 
     @OptIn(UnstableApi::class)
@@ -348,6 +275,110 @@ class PlaybackService() : MediaSessionService() {
 
         //Initialize MediaSession and link it to the player
         mediaSession = MediaSession.Builder(this, forwardingPlayer).build()
+    }
+
+    //Rebuild timeline with saved playback state (upon app launch)
+    private fun restoreStateOnStart() {
+        //Launch on Main thread - Data fetches are already on IO thread
+        serviceScope.launch {
+            //Get entire saved timeline
+            val timelineItems = persistenceRepository.getRestoredMediaItems()
+            //Get entire saved original playlist
+            val originalItems = persistenceRepository.getRestoredOriginalPlaylist()
+            //Get saved player data states
+            val meta = withContext(Dispatchers.IO) { persistenceRepository.playbackMetadata.first() }
+
+            if (timelineItems.isNotEmpty()) {
+                //Update lists and states
+                playbackStateStore.originalPlaylist = originalItems
+                playbackStateStore.setPlaylistId(meta.playlistId)
+                playbackStateStore.setShuffling(meta.isShuffling)
+
+                //Rebuild ExoPlayer's timeline
+                exoPlayer.setMediaItems(timelineItems)
+                //Apply saved repeat mode
+                exoPlayer.repeatMode = if (meta.repeatingCurrent) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
+
+                //Seek to saved index and duration (pick up where user left off)
+                val targetIndex = if (meta.index >= 0 && meta.index < timelineItems.size) meta.index else 0
+                exoPlayer.seekTo(targetIndex, meta.position) //Perform seek
+                exoPlayer.prepare()
+            }
+        }
+    }
+
+    private fun restartPlaylistNatively(mediaItems: List<MediaItem>, playlistId: Int, startShuffled: Boolean) {
+        //Prepare final timeline with shared prep logic from Store
+        val (finalTimeline, playIndex) = playbackStateStore.preparePlaylistTimeline(
+            mediaItems = mediaItems,
+            playlistId = playlistId,
+            startItemIndex = -1,
+            startShuffled = startShuffled
+        )
+
+        //Apply timeline to ExoPlayer
+        exoPlayer.setMediaItems(finalTimeline)
+        //Seek to specified start item (always 0 in this case)
+        exoPlayer.seekTo(playIndex, 0L)
+        exoPlayer.prepare()
+        exoPlayer.play()
+    }
+
+    //Erase all manual queue items from timeline BEFORE current item
+    private fun consumePastManualQueueItems(player: Player) {
+        val currentIndex = player.currentMediaItemIndex
+        if (currentIndex == C.INDEX_UNSET) return
+
+        //Iterate backwards from right behind the current item down to the beginning of the timeline
+        for (i in currentIndex - 1 downTo 0) {
+            val item = player.getMediaItemAt(i)
+            //Remove item from timeline if it is a manual queue item (consume it)
+            if (item.mediaMetadata.extras?.getBoolean("IS_MANUAL_QUEUE") == true) {
+                player.removeMediaItem(i) //Perform removal
+            }
+        }
+    }
+
+    //Save all current player data (timeline, states, lists) to disk
+    private fun saveCurrentStateToDisk(player: Player) {
+        //Capture snapshot on Main thread
+        val position = player.currentPosition
+        val index = player.currentMediaItemIndex
+        val isShuffling = playbackStateStore.isShuffling.value
+        val isRepeating = player.repeatMode == Player.REPEAT_MODE_ONE
+        val playlistId = playbackStateStore.currentPlaylistId.value
+        val originalCopy = playbackStateStore.originalPlaylist.toList()
+
+        //Extract timeline items
+        val timelineItems = mutableListOf<MediaItem>()
+        for (i in 0 until player.mediaItemCount) {
+            timelineItems.add(player.getMediaItemAt(i))
+        }
+
+        //Pass snapshot to IO thread
+        CoroutineScope(Dispatchers.IO).launch {
+            persistenceRepository.savePlaybackState(
+                position = position,
+                index = index,
+                isShuffling = isShuffling,
+                isRepeating = isRepeating,
+                playlistId = playlistId,
+                timelineItems = timelineItems,
+                originalItems = originalCopy
+            )
+        }
+    }
+
+    //Save just the position (index and duration) to disk
+    private fun savePositionOnly(player: Player) {
+        //Capture snapshot on main thread
+        val index = player.currentMediaItemIndex
+        val position = player.currentPosition
+
+        //Perform save on IO thread
+        serviceScope.launch(Dispatchers.IO) {
+            persistenceRepository.savePlaybackPosition(index, position)
+        }
     }
 
     //Widget updating methods
