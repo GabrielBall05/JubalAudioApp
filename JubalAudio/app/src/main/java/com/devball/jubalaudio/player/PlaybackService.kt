@@ -1,5 +1,6 @@
 package com.devball.jubalaudio.player
 
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.glance.appwidget.GlanceAppWidgetManager
@@ -21,6 +22,8 @@ import com.devball.jubalaudio.data.local.toMediaItem
 import com.devball.jubalaudio.data.repository.PlaybackPersistenceRepository
 import com.devball.jubalaudio.data.repository.PlaylistRepository
 import com.devball.jubalaudio.data.repository.SettingsRepository
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.SettableFuture
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -97,6 +100,15 @@ class PlaybackService() : MediaSessionService() {
             }
         }
 
+        //Executes whenever repeat mode is changed
+        override fun onRepeatModeChanged(repeatMode: Int) {
+            super.onRepeatModeChanged(repeatMode)
+            //Immediately save new state to disk
+            CoroutineScope(Dispatchers.IO).launch {
+                persistenceRepository.saveRepeatMode(repeatMode == Player.REPEAT_MODE_ONE)
+            }
+        }
+
         //Executes whenever playback state changes
         override fun onPlaybackStateChanged(playbackState: Int) {
             super.onPlaybackStateChanged(playbackState)
@@ -166,10 +178,19 @@ class PlaybackService() : MediaSessionService() {
         }
     }
 
+    @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
+        Log.d("OfflineAudioSuite", "PlaybackService: onCreate()")
+
+        //Initialization
         initializePlayer()
-        restoreStateOnStart()
+
+        //Restoration
+        serviceScope.launch {
+            val restored = getRestoredPlaybackData()
+            restored?.let { applyRestoration(it) }
+        }
     }
 
     @OptIn(UnstableApi::class)
@@ -274,35 +295,82 @@ class PlaybackService() : MediaSessionService() {
         }
 
         //Initialize MediaSession and link it to the player
-        mediaSession = MediaSession.Builder(this, forwardingPlayer).build()
+        mediaSession = MediaSession.Builder(this, forwardingPlayer)
+            .setCallback(object : MediaSession.Callback {
+
+                //Rebuild timeline with saved playback state
+                override fun onPlaybackResumption(
+                    mediaSession: MediaSession,
+                    controller: MediaSession.ControllerInfo,
+                    isForPlayback: Boolean
+                ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+                    val future = SettableFuture.create<MediaSession.MediaItemsWithStartPosition>()
+
+                    //Launch on Main thread - Data fetches are already on IO thread
+                    serviceScope.launch {
+                        try {
+                            Log.d("OfflineAudioSuite", "PlaybackService: onPlaybackResumption()}")
+
+                            //Get saved playback data
+                            val restored = getRestoredPlaybackData()
+                            if (restored != null) {
+                                applyRestoration(restored)
+                                future.set(restored)
+                            }
+                            else { //If database was empty, throw exception to tell Media3 there is nothing to resume
+                                future.setException(UnsupportedOperationException("No saved media to resume."))
+                            }
+                        } catch (e: Exception) {
+                            future.setException(e)
+                        }
+                    }
+
+                    return future
+                }
+            })
+            .build()
     }
 
-    //Rebuild timeline with saved playback state (upon app launch)
-    private fun restoreStateOnStart() {
-        //Launch on Main thread - Data fetches are already on IO thread
+    //Gets saved playback state from playback persistence repository
+    @OptIn(UnstableApi::class)
+    private suspend fun getRestoredPlaybackData(): MediaSession.MediaItemsWithStartPosition? {
+        //Get entire saved timeline, entire saved original playlist, and all saved player data states
+        val timelineItems = persistenceRepository.getRestoredMediaItems()
+        val originalItems = persistenceRepository.getRestoredOriginalPlaylist()
+        val meta = persistenceRepository.playbackMetadata.first()
+
+        if (timelineItems.isEmpty()) return null
+
+        //Sync UI states
+        playbackStateStore.originalPlaylist = originalItems
+        playbackStateStore.setPlaylistId(meta.playlistId)
+        playbackStateStore.setShuffling(meta.isShuffling)
+
+        //Return the timeline with a start position
+        return MediaSession.MediaItemsWithStartPosition(
+            timelineItems,
+            meta.index.coerceIn(timelineItems.indices),
+            meta.position
+        )
+    }
+
+
+    @OptIn(UnstableApi::class)
+    private fun applyRestoration(restored: MediaSession.MediaItemsWithStartPosition) {
+        //Check if player is already playing or has items to avoid overwriting active playback
+        if (exoPlayer.mediaItemCount > 0) return
+
         serviceScope.launch {
-            //Get entire saved timeline
-            val timelineItems = persistenceRepository.getRestoredMediaItems()
-            //Get entire saved original playlist
-            val originalItems = persistenceRepository.getRestoredOriginalPlaylist()
-            //Get saved player data states
-            val meta = withContext(Dispatchers.IO) { persistenceRepository.playbackMetadata.first() }
+            val meta = persistenceRepository.playbackMetadata.first()
+            withContext(Dispatchers.Main) {
+                //Set timeline and seek
+                exoPlayer.setMediaItems(restored.mediaItems, restored.startIndex, restored.startPositionMs)
 
-            if (timelineItems.isNotEmpty()) {
-                //Update lists and states
-                playbackStateStore.originalPlaylist = originalItems
-                playbackStateStore.setPlaylistId(meta.playlistId)
-                playbackStateStore.setShuffling(meta.isShuffling)
-
-                //Rebuild ExoPlayer's timeline
-                exoPlayer.setMediaItems(timelineItems)
-                //Apply saved repeat mode
+                //Manually set repeat mode directly to the player
                 exoPlayer.repeatMode = if (meta.repeatingCurrent) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
 
-                //Seek to saved index and duration (pick up where user left off)
-                val targetIndex = if (meta.index >= 0 && meta.index < timelineItems.size) meta.index else 0
-                exoPlayer.seekTo(targetIndex, meta.position) //Perform seek
                 exoPlayer.prepare()
+                Log.d("OfflineAudioSuite", "Applied restoration: RepeatMode=${exoPlayer.repeatMode}")
             }
         }
     }

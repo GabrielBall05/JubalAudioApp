@@ -74,6 +74,18 @@ class PlaybackPersistenceRepository @Inject constructor(
         }
     }
 
+    suspend fun saveRepeatMode(repeatingCurrent: Boolean) = withContext(Dispatchers.IO) {
+        dataStore.edit { prefs ->
+            prefs[Keys.REPEATING_CURRENT] = repeatingCurrent
+        }
+    }
+
+    suspend fun saveShuffleState(isShuffling: Boolean) = withContext(Dispatchers.IO) {
+        dataStore.edit { prefs ->
+            prefs[Keys.SHUFFLE_ON] = isShuffling
+        }
+    }
+
     suspend fun getRestoredMediaItems(): List<MediaItem> = withContext(Dispatchers.IO) {
         val savedQueue = playbackDao.getSavedQueue()
         savedQueue.mapNotNull { entry ->

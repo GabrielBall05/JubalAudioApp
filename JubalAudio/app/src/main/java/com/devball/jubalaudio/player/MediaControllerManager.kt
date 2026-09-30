@@ -155,6 +155,11 @@ class MediaControllerManager @Inject constructor(
 
         playbackStateStore.toggleShuffle() //Toggle state in Store
 
+        //Save new state to disk immediately
+        CoroutineScope(Dispatchers.IO).launch {
+            persistenceRepository.saveShuffleState(isShuffling.value)
+        }
+
         //Get current index, current size of manual queue, and current start index for up next (after manual queue)
         val currentIndex = player.currentMediaItemIndex
         val manualQueueSize = _manualQueueState.value.size
@@ -453,10 +458,6 @@ class MediaControllerManager @Inject constructor(
                 updateUIStates(player)
                 _repeatingCurrent.value = player.repeatMode == Player.REPEAT_MODE_ONE
                 updateCurrentPosition()
-
-//                //Restoration - after adding listeners
-//                if (player.mediaItemCount == 0) restorePlaybackState() //If player is empty (cold start), restore playback from disk
-//                else updateUIStates(player) //Otherwise (app relaunched while music playing), just let the ui sync to the live player
             }
             //Setup failed:
             catch (e: Exception) {
@@ -497,43 +498,6 @@ class MediaControllerManager @Inject constructor(
         _previousMediaItem.value = if (currentIndex > 0) player.getMediaItemAt(currentIndex - 1)
             else null
     }
-
-//    //Rebuild timeline with saved playback state (upon app launch)
-//    fun restorePlaybackState() {
-//        val player = controller ?: return
-//
-//        //Use Main thread to retrieve saved data
-//        CoroutineScope(Dispatchers.Main).launch {
-//            //Get entire saved timeline
-//            val timelineItems = persistenceRepository.getRestoredMediaItems()
-//            //Get entire saved original playlist
-//            val originalItems = persistenceRepository.getRestoredOriginalPlaylist()
-//            //Get saved player data states
-//            val meta = persistenceRepository.playbackMetadata.first()
-//
-//            if (timelineItems.isNotEmpty()) {
-//                //Update lists and states
-//                originalPlaylist = originalItems
-//                playbackStateStore.setPlaylistId(meta.playlistId)
-//                playbackStateStore.setShuffling(meta.isShuffling)
-//                _repeatingCurrent.value = meta.repeatingCurrent //TODO: Have this somewhere DONE
-//                _currentPosition.value = meta.position //TODO: Have this somewhere DONE
-//
-//                //Rebuild ExoPlayer's timeline
-//                player.setMediaItems(timelineItems)
-//                //Apply saved repeat mode
-//                player.repeatMode = if (meta.repeatingCurrent) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
-//
-//                //Seek to saved index and duration (pick up where user left off)
-//                val targetIndex = if (meta.index >= 0 && meta.index < timelineItems.size) meta.index else 0
-//                player.seekTo(targetIndex, meta.position) //Perform seek
-//                player.prepare()
-//
-//                //Immediately force UI updates
-//                updateUIStates(player) //TODO: Move this somewhere DONE
-//            }
-//        }
-//    }
 
     //Completely wipe out player timeline and reset states
     fun nukePlayer() {
