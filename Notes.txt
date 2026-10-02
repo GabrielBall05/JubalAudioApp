@@ -1,10 +1,6 @@
 TODO:
 
-widget
-	1. going to recents -> active apps -> jubal -> stop while its playing causes it to stay at pause button
-	2. When app is completely gone, I have to click buttons twice
-	3. Clicking a button on widget caused player to jump to first item in timeline. Don't know why, can't replicate
-improve mediapicker
+
 improve viewmodels
 improve file organization
 
@@ -18,6 +14,11 @@ horizontal orientation layouts - currently locked to portrait
 drag indicator (perhaps elevation) on dragging list items
 mediapager flickers when resizing - no resizing and intercept drags to prevent swiping? - populate with full list?
 spam composables to reduce lines of code in big screens
+
+widget
+	1. going to recents -> active apps -> jubal -> stop while its playing causes it to stay at pause button
+		similarly, if i do that and then click play, repeatmode will be lost, but if i open app without hitting button, repeatmode stays
+	2. When app is completely gone, I have to click buttons twice
 
 
 ***KEEP CURRENT VERSION IN OPEN TESTING UNTIL THE MAJOR CHANGE IS FINISHED - THEN RELEASE TO PUBLIC***

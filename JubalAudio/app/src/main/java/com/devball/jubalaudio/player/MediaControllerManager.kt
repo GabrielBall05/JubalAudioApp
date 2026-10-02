@@ -420,12 +420,8 @@ class MediaControllerManager @Inject constructor(
                                 Player.EVENT_MEDIA_ITEM_TRANSITION,
                                 Player.EVENT_POSITION_DISCONTINUITY
                             )
-                        ) {
-                            updateCurrentPosition()
+                        ) { updateCurrentPosition() }
 
-                            // Also ensure duration is updated if the timeline just arrived
-                            _duration.value = player.duration.coerceAtLeast(0L)
-                        }
                         //Update UI when repeat mode finishes syncing/changing
                         if (events.contains(Player.EVENT_REPEAT_MODE_CHANGED)) {
                             _repeatingCurrent.value = player.repeatMode == Player.REPEAT_MODE_ONE
