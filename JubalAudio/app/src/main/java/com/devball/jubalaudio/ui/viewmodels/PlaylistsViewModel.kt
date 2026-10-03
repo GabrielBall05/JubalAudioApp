@@ -5,11 +5,13 @@ import com.devball.jubalaudio.data.local.MediaEntity
 import com.devball.jubalaudio.data.local.PlaylistEntity
 import com.devball.jubalaudio.data.repository.PlaylistRepository
 import com.devball.jubalaudio.data.repository.SettingsRepository
+import com.devball.jubalaudio.data.repository.UserPreferencesRepository
 import com.devball.jubalaudio.util.PlaylistsSortOrder
 import com.devball.jubalaudio.util.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -20,7 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PlaylistsViewModel @Inject constructor(
     private val playlistRepository: PlaylistRepository,
-    settingsRepository: SettingsRepository
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : BaseViewModel() {
 
     //For searching
@@ -28,14 +30,14 @@ class PlaylistsViewModel @Inject constructor(
     val searchQuery = _searchQuery.asStateFlow()
 
     //Sort State
-    private val _sortOrder = MutableStateFlow(SettingsRepository.INITIAL_PLAYLISTS_SORT_ORDER)
-    val sortOrder = _sortOrder.asStateFlow()
+    val sortOrder: StateFlow<PlaylistsSortOrder> = userPreferencesRepository.playlistsSortOrderFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UserPreferencesRepository.INITIAL_PLAYLISTS_SORT_ORDER)
 
     //Get all playlist entities from the db
     private val _allPlaylists = playlistRepository.allPlaylistsWithCounts
 
     //Filter full list by combining with search query
-    val filteredPlaylists = combine(_allPlaylists, _searchQuery, _sortOrder) { playlists, query, sort ->
+    val filteredPlaylists = combine(_allPlaylists, _searchQuery, sortOrder) { playlists, query, sort ->
         //Filter first
         val filtered = if (query.isBlank()) //Search field empty, show whole list
             playlists
@@ -55,17 +57,15 @@ class PlaylistsViewModel @Inject constructor(
     }.stateIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = emptyList())
 
     init {
-        viewModelScope.launch {
-            _sortOrder.value = settingsRepository.defaultPlaylistsSortOrderFlow.first()
-        }
+
     }
 
     fun onSearchQueryChange(newQuery: String) {
         _searchQuery.value = newQuery
     }
 
-    fun onSortOrderChange(newOrder: PlaylistsSortOrder) {
-        _sortOrder.value = newOrder
+    fun onSortOrderChange(newOrder: PlaylistsSortOrder) = launchWithoutLoading {
+        userPreferencesRepository.updatePlaylistsSortOrder(newOrder)
     }
 
     fun createPlaylist(playlist: PlaylistEntity) = launchWithoutLoading {

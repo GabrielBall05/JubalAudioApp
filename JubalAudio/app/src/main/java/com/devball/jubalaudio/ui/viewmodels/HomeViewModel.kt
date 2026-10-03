@@ -8,6 +8,7 @@ import com.devball.jubalaudio.data.local.PlaylistEntity
 import com.devball.jubalaudio.data.repository.MediaRepository
 import com.devball.jubalaudio.data.repository.PlaylistRepository
 import com.devball.jubalaudio.data.repository.SettingsRepository
+import com.devball.jubalaudio.data.repository.UserPreferencesRepository
 import com.devball.jubalaudio.util.MediaSortOrder
 import com.devball.jubalaudio.util.UiEvent
 import com.devball.jubalaudio.util.getCommonArtwork
@@ -16,6 +17,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -29,21 +31,21 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val mediaRepository: MediaRepository,
     private val playlistRepository: PlaylistRepository,
-    settingsRepository: SettingsRepository
+    private val userPreferencesRepository: UserPreferencesRepository
 ): BaseViewModel() {
     //For searching
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
     //Sort State
-    private val _sortOrder = MutableStateFlow(SettingsRepository.INITIAL_MEDIA_SORT_ORDER)
-    val sortOrder = _sortOrder.asStateFlow()
+    val sortOrder: StateFlow<MediaSortOrder> = userPreferencesRepository.mediaSortOrderFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UserPreferencesRepository.INITIAL_MEDIA_SORT_ORDER)
 
     //Get all media entities from DB using the interactor's shared flow
     private val _allMedia = mediaRepository.allMedia
 
     //Filter full list by combining with the search query (this is the list shown in UI)
-    val filteredMedia = combine(_allMedia, _searchQuery, _sortOrder) { media, query, sort ->
+    val filteredMedia = combine(_allMedia, _searchQuery, sortOrder) { media, query, sort ->
         //Filter first
         val filtered = if (query.isBlank()) { //Search field empty, show whole list
             media
@@ -97,21 +99,14 @@ class HomeViewModel @Inject constructor(
 
 
     init {
-        //Get initial sort order to use from settings
-        viewModelScope.launch {
-            _sortOrder.value = settingsRepository.defaultMediaSortOrderFlow.first()
-        }
-
         //Validate URI integrity and notify user if applicable
         viewModelScope.launch {
             scanUris()
         }
     }
 
-    fun refreshAvailablePlaylists(mediaIds: List<Int>) {
-        viewModelScope.launch {
-            _availablePlaylists.value = playlistRepository.getPlaylistsNotHavingMediaList(mediaIds)
-        }
+    fun refreshAvailablePlaylists(mediaIds: List<Int>) = launchWithoutLoading {
+        _availablePlaylists.value = playlistRepository.getPlaylistsNotHavingMediaList(mediaIds)
     }
 
     fun onSearchQueryChange(newQuery: String) {
@@ -119,8 +114,8 @@ class HomeViewModel @Inject constructor(
         _selectedMediaIds.value = emptyList() //Clear selections
     }
 
-    fun onSortOrderChange(newOrder: MediaSortOrder) {
-        _sortOrder.value = newOrder
+    fun onSortOrderChange(newOrder: MediaSortOrder) = launchWithoutLoading {
+        userPreferencesRepository.updateMediaSortOrder(newOrder)
     }
 
     fun toggleSelection(mediaId: Int) {

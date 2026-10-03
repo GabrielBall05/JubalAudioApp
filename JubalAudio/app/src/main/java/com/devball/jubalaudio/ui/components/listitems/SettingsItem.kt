@@ -15,7 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-fun LazyListScope.settingsItem(
+fun LazyListScope.SettingsItem(
     modifier: Modifier = Modifier,
     mainText: String,
     subText: String? = null,
