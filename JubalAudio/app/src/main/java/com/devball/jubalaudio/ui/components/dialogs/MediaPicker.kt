@@ -13,7 +13,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.devball.jubalaudio.data.local.MediaEntity
+import com.devball.jubalaudio.data.local.entity.MediaEntity
 import com.devball.jubalaudio.ui.components.listitems.MediaPickerListItem
 
 @Composable

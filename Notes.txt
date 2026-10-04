@@ -1,14 +1,15 @@
 TODO:
 
 
-improve viewmodels
-improve file organization
+improve viewmodels/ui
+implement mediastore + file/uri resolution
+implement direct metadata editing
 
 
 log statements everywhere (and improve its tag/message)
 when copying/storing images, maybe try to make sure there are no duplicated or orphaned images to save space on phone
 snackbars instead of toasts
-thoroughly comment code and standardize formats
+thoroughly comment code and standardize code formatting
 better app icon
 horizontal orientation layouts - currently locked to portrait
 drag indicator (perhaps elevation) on dragging list items
@@ -24,22 +25,4 @@ widget
 ***KEEP CURRENT VERSION IN OPEN TESTING UNTIL THE MAJOR CHANGE IS FINISHED - THEN RELEASE TO PUBLIC***
 ***Or just have it in production and attempt a migration***
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Maybe:
-@HomeScreen.kt   @PlaylistsScreen.kt   @PlaylistDetailsScreen.kt   @HomeViewModel.kt   @PlaylistsViewModel.kt   @PlaylistDetailsViewModel.kt 
-So, I seem to have a lot of duplicated code. for example, in home screen and playlist details screen, i have a couple hundred lines of code on both screens that are essentially the same thing (sometimes a little different), handling a media list item's options (or handling a list of media items' bulk options). In turn, i have a lot of same/similar code in the respective viewmodels.There are other examples as well.
-So, I would like to ask you what the best way of handling this is? say i make another screen where media list items appear and i want the same abilities (like edit, play, add to queue, delete, remove from playlist, and all the bulk options too). It would require duplicating another couple hundred loc. I figure this is bad practice right? so, how does one alleviate this? is there a specific design pattern? I want to do this the industry standard way where the code is actually completely reusable and not duplicated anywhere if possible.
 

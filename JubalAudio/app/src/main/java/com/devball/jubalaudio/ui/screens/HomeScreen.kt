@@ -49,10 +49,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.devball.jubalaudio.data.local.MediaEntity
-import com.devball.jubalaudio.ui.components.common.BulkActionsBar
-import com.devball.jubalaudio.ui.components.common.EmptyMessage
-import com.devball.jubalaudio.ui.components.common.ExpandableTopBar
+import com.devball.jubalaudio.data.local.entity.MediaEntity
+import com.devball.jubalaudio.ui.components.bars.BulkActionsBar
+import com.devball.jubalaudio.ui.components.layout.EmptyMessage
+import com.devball.jubalaudio.ui.components.bars.ExpandableTopBar
 import com.devball.jubalaudio.ui.components.dialogs.ConfirmationDialog
 import com.devball.jubalaudio.ui.components.dialogs.EditMediaBulkDialog
 import com.devball.jubalaudio.ui.components.dialogs.EditMediaDialog
@@ -62,14 +62,14 @@ import com.devball.jubalaudio.ui.components.dialogs.PlaylistPicker
 import com.devball.jubalaudio.ui.components.dialogs.SortOrderDialog
 import com.devball.jubalaudio.ui.components.listitems.MediaListItemSelectable
 import com.devball.jubalaudio.ui.components.listitems.StaleUriListItem
-import com.devball.jubalaudio.ui.components.optionsheets.MediaOption
-import com.devball.jubalaudio.ui.components.optionsheets.MediaOptionsSheet
-import com.devball.jubalaudio.ui.components.optionsheets.MediaSheetAction
-import com.devball.jubalaudio.ui.viewmodels.HomeViewModel
-import com.devball.jubalaudio.util.MediaSortOrder
-import com.devball.jubalaudio.util.ObserveUiEvents
-import com.devball.jubalaudio.util.PullToRefresh
-import com.devball.jubalaudio.util.indicatorBorder
+import com.devball.jubalaudio.ui.components.menus.MediaOption
+import com.devball.jubalaudio.ui.components.menus.MediaOptionsSheet
+import com.devball.jubalaudio.ui.components.menus.MediaSheetAction
+import com.devball.jubalaudio.viewmodels.HomeViewModel
+import com.devball.jubalaudio.utilgen.MediaSortOrder
+import com.devball.jubalaudio.viewmodels.events.ObserveUiEvents
+import com.devball.jubalaudio.ui.utilui.PullToRefresh
+import com.devball.jubalaudio.ui.modifiers.indicatorBorder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

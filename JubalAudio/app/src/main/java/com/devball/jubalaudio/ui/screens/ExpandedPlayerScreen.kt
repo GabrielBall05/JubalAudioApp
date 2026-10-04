@@ -52,15 +52,15 @@ import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.devball.jubalaudio.ui.components.common.PlayerPager
+import com.devball.jubalaudio.ui.components.player.PlayerPager
 import com.devball.jubalaudio.ui.components.dialogs.ConfirmationDialog
 import com.devball.jubalaudio.ui.components.dialogs.PlaylistFormDialog
 import com.devball.jubalaudio.ui.components.dialogs.PlaylistPicker
-import com.devball.jubalaudio.ui.components.optionsheets.MediaOption
-import com.devball.jubalaudio.ui.components.optionsheets.MediaOptionsSheet
-import com.devball.jubalaudio.ui.components.optionsheets.MediaSheetAction
-import com.devball.jubalaudio.ui.viewmodels.MainViewModel
-import com.devball.jubalaudio.util.indicatorBorder
+import com.devball.jubalaudio.ui.components.menus.MediaOption
+import com.devball.jubalaudio.ui.components.menus.MediaOptionsSheet
+import com.devball.jubalaudio.ui.components.menus.MediaSheetAction
+import com.devball.jubalaudio.viewmodels.MainViewModel
+import com.devball.jubalaudio.ui.modifiers.indicatorBorder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

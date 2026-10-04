@@ -16,11 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.devball.jubalaudio.data.local.MediaEntity
-import com.devball.jubalaudio.ui.components.common.IconPulseEffect
-import com.devball.jubalaudio.ui.components.common.IconWithTooltip
-import com.devball.jubalaudio.ui.components.common.SurfacedImage
-import com.devball.jubalaudio.ui.components.common.WeightedColumn
+import com.devball.jubalaudio.data.local.entity.MediaEntity
+import com.devball.jubalaudio.ui.components.layout.IconPulseEffect
+import com.devball.jubalaudio.ui.components.layout.IconWithTooltip
+import com.devball.jubalaudio.ui.components.layout.SurfacedImage
+import com.devball.jubalaudio.ui.components.layout.WeightedColumn
 
 @Composable
 fun StaleUriListItem(

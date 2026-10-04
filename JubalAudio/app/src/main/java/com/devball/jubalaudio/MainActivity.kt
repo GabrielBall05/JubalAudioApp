@@ -36,9 +36,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -49,17 +46,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.devball.jubalaudio.ui.Screen
-import com.devball.jubalaudio.ui.components.common.MiniPlayerBar
+import com.devball.jubalaudio.ui.components.player.MiniPlayerBar
 import com.devball.jubalaudio.ui.screens.ExpandedPlayerScreen
 import com.devball.jubalaudio.ui.screens.HomeScreen
 import com.devball.jubalaudio.ui.screens.PlaylistDetailsScreen
 import com.devball.jubalaudio.ui.screens.PlaylistsScreen
 import com.devball.jubalaudio.ui.screens.SettingsScreen
 import com.devball.jubalaudio.ui.theme.JubalAudioTheme
-import com.devball.jubalaudio.ui.viewmodels.MainViewModel
+import com.devball.jubalaudio.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.devball.jubalaudio.util.ObserveUiEvents
+import com.devball.jubalaudio.viewmodels.events.ObserveUiEvents
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

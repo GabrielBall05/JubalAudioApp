@@ -19,7 +19,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.devball.jubalaudio.ui.components.dialogs.ConfirmationDialog
 import com.devball.jubalaudio.ui.components.listitems.SettingsItem
-import com.devball.jubalaudio.ui.viewmodels.SettingsViewModel
+import com.devball.jubalaudio.viewmodels.SettingsViewModel
 
 @Composable
 fun SettingsScreen(

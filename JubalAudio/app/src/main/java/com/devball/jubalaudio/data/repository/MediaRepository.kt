@@ -5,10 +5,10 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.core.net.toUri
-import com.devball.jubalaudio.data.local.MediaDao
-import com.devball.jubalaudio.data.local.MediaEntity
-import com.devball.jubalaudio.util.copyUriToInternalStorage
-import com.devball.jubalaudio.util.getMediaMetadata
+import com.devball.jubalaudio.data.local.dao.MediaDao
+import com.devball.jubalaudio.data.local.entity.MediaEntity
+import com.devball.jubalaudio.utilgen.copyUriToInternalStorage
+import com.devball.jubalaudio.utilgen.getMediaMetadata
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

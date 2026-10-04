@@ -22,6 +22,7 @@ import com.devball.jubalaudio.data.local.toMediaItem
 import com.devball.jubalaudio.data.repository.PlaybackPersistenceRepository
 import com.devball.jubalaudio.data.repository.PlaylistRepository
 import com.devball.jubalaudio.data.repository.SettingsRepository
+import com.devball.jubalaudio.widget.PlayerWidget
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
 import dagger.hilt.android.AndroidEntryPoint

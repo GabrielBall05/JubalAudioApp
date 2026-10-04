@@ -4,9 +4,9 @@ import android.content.Context
 import androidx.room.Room
 import com.devball.jubalaudio.data.local.AppDatabase
 import com.devball.jubalaudio.data.local.DatabaseTriggerCallback
-import com.devball.jubalaudio.data.local.MediaDao
-import com.devball.jubalaudio.data.local.PlaybackQueueDao
-import com.devball.jubalaudio.data.local.PlaylistDao
+import com.devball.jubalaudio.data.local.dao.MediaDao
+import com.devball.jubalaudio.data.local.dao.PlaybackQueueDao
+import com.devball.jubalaudio.data.local.dao.PlaylistDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

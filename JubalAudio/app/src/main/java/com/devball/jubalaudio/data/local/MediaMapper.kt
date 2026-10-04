@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import com.devball.jubalaudio.data.local.entity.MediaEntity
 import java.util.UUID
 
 fun MediaEntity.toMediaItem(): MediaItem {

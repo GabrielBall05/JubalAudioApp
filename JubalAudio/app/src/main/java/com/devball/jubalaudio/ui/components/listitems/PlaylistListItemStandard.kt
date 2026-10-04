@@ -16,9 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.devball.jubalaudio.data.local.PlaylistEntity
-import com.devball.jubalaudio.ui.components.common.SurfacedImage
-import com.devball.jubalaudio.ui.components.common.WeightedColumn
+import com.devball.jubalaudio.data.local.entity.PlaylistEntity
+import com.devball.jubalaudio.ui.components.layout.SurfacedImage
+import com.devball.jubalaudio.ui.components.layout.WeightedColumn
 
 @Composable
 fun PlaylistListItemStandard(

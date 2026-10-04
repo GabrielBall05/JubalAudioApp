@@ -16,10 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.devball.jubalaudio.data.local.MediaEntity
-import com.devball.jubalaudio.ui.components.common.SelectionIcon
-import com.devball.jubalaudio.ui.components.common.SurfacedImage
-import com.devball.jubalaudio.ui.components.common.WeightedColumn
+import com.devball.jubalaudio.data.local.entity.MediaEntity
+import com.devball.jubalaudio.ui.components.layout.SelectionIcon
+import com.devball.jubalaudio.ui.components.layout.SurfacedImage
+import com.devball.jubalaudio.ui.components.layout.WeightedColumn
 
 @Composable
 fun MediaListItemSelectable(

@@ -2,6 +2,14 @@ package com.devball.jubalaudio.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.devball.jubalaudio.data.local.dao.MediaDao
+import com.devball.jubalaudio.data.local.dao.PlaybackQueueDao
+import com.devball.jubalaudio.data.local.dao.PlaylistDao
+import com.devball.jubalaudio.data.local.entity.MediaEntity
+import com.devball.jubalaudio.data.local.entity.OriginalPlaylistEntity
+import com.devball.jubalaudio.data.local.entity.PlaybackQueueEntity
+import com.devball.jubalaudio.data.local.entity.PlaylistEntity
+import com.devball.jubalaudio.data.local.entity.PlaylistMediaItem
 
 @Database(
     entities = [

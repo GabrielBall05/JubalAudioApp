@@ -16,7 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.devball.jubalaudio.util.SortOption
+import com.devball.jubalaudio.utilgen.SortOption
 
 @Composable
 fun <T: SortOption> SortOrderDialog(

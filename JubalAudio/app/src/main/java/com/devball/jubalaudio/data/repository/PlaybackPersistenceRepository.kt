@@ -8,9 +8,9 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.media3.common.MediaItem
-import com.devball.jubalaudio.data.local.OriginalPlaylistEntity
-import com.devball.jubalaudio.data.local.PlaybackQueueDao
-import com.devball.jubalaudio.data.local.PlaybackQueueEntity
+import com.devball.jubalaudio.data.local.entity.OriginalPlaylistEntity
+import com.devball.jubalaudio.data.local.dao.PlaybackQueueDao
+import com.devball.jubalaudio.data.local.entity.PlaybackQueueEntity
 import com.devball.jubalaudio.data.local.asManualQueueItem
 import com.devball.jubalaudio.data.local.toMediaItem
 import dagger.hilt.android.qualifiers.ApplicationContext

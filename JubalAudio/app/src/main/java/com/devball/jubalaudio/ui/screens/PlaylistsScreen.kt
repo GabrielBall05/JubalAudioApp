@@ -29,23 +29,23 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.devball.jubalaudio.data.local.MediaEntity
-import com.devball.jubalaudio.data.local.PlaylistEntity
+import com.devball.jubalaudio.data.local.entity.MediaEntity
+import com.devball.jubalaudio.data.local.entity.PlaylistEntity
 import com.devball.jubalaudio.ui.Screen
-import com.devball.jubalaudio.ui.components.common.EmptyMessage
-import com.devball.jubalaudio.ui.components.common.ExpandableTopBar
+import com.devball.jubalaudio.ui.components.layout.EmptyMessage
+import com.devball.jubalaudio.ui.components.bars.ExpandableTopBar
 import com.devball.jubalaudio.ui.components.dialogs.ConfirmationDialog
 import com.devball.jubalaudio.ui.components.dialogs.LoadingDialog
 import com.devball.jubalaudio.ui.components.dialogs.MediaPicker
 import com.devball.jubalaudio.ui.components.dialogs.PlaylistFormDialog
 import com.devball.jubalaudio.ui.components.dialogs.SortOrderDialog
 import com.devball.jubalaudio.ui.components.listitems.PlaylistListItemStandard
-import com.devball.jubalaudio.ui.components.optionsheets.PlaylistOption
-import com.devball.jubalaudio.ui.components.optionsheets.PlaylistOptionsSheet
-import com.devball.jubalaudio.ui.components.optionsheets.PlaylistSheetAction
-import com.devball.jubalaudio.ui.viewmodels.PlaylistsViewModel
-import com.devball.jubalaudio.util.ObserveUiEvents
-import com.devball.jubalaudio.util.PlaylistsSortOrder
+import com.devball.jubalaudio.ui.components.menus.PlaylistOption
+import com.devball.jubalaudio.ui.components.menus.PlaylistOptionsSheet
+import com.devball.jubalaudio.ui.components.menus.PlaylistSheetAction
+import com.devball.jubalaudio.viewmodels.PlaylistsViewModel
+import com.devball.jubalaudio.viewmodels.events.ObserveUiEvents
+import com.devball.jubalaudio.utilgen.PlaylistsSortOrder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

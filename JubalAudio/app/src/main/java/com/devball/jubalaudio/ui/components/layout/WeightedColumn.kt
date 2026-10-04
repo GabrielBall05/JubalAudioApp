@@ -1,0 +1,29 @@
+package com.devball.jubalaudio.ui.components.layout
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun RowScope.WeightedColumn(
+    modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues(horizontal = 12.dp),
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = modifier
+            .weight(1f)
+            .padding(paddingValues),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.Start
+    ) {
+        content()
+    }
+}

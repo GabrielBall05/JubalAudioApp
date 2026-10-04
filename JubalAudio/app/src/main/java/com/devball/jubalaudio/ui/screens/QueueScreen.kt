@@ -1,7 +1,6 @@
 package com.devball.jubalaudio.ui.screens
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,19 +24,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
-import com.devball.jubalaudio.data.local.PlaylistEntity
+import com.devball.jubalaudio.data.local.entity.PlaylistEntity
 import com.devball.jubalaudio.ui.components.dialogs.ConfirmationDialog
 import com.devball.jubalaudio.ui.components.listitems.QueueItem
 import com.devball.jubalaudio.ui.components.listitems.QueueItemImageSize
 import com.devball.jubalaudio.ui.components.listitems.QueueItemPadding
-import com.devball.jubalaudio.util.SwipeDismissable
-import com.devball.jubalaudio.util.SwipeDismissableBackground
+import com.devball.jubalaudio.ui.utilui.SwipeDismissable
+import com.devball.jubalaudio.ui.utilui.SwipeDismissableBackground
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 

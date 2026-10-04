@@ -2,12 +2,12 @@ package com.devball.jubalaudio.data.repository
 
 import android.content.Context
 import androidx.core.net.toUri
-import com.devball.jubalaudio.data.local.MediaEntity
-import com.devball.jubalaudio.data.local.PlaylistDao
-import com.devball.jubalaudio.data.local.PlaylistEntity
-import com.devball.jubalaudio.data.local.PlaylistMediaItem
-import com.devball.jubalaudio.data.local.PlaylistWithCount
-import com.devball.jubalaudio.util.copyUriToInternalStorage
+import com.devball.jubalaudio.data.local.entity.MediaEntity
+import com.devball.jubalaudio.data.local.dao.PlaylistDao
+import com.devball.jubalaudio.data.local.entity.PlaylistEntity
+import com.devball.jubalaudio.data.local.entity.PlaylistMediaItem
+import com.devball.jubalaudio.data.local.entity.PlaylistWithCount
+import com.devball.jubalaudio.utilgen.copyUriToInternalStorage
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

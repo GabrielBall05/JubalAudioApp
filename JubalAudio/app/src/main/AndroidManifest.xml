@@ -43,7 +43,7 @@
 
         </service>
 
-        <receiver android:name=".player.PlayerWidgetReceiver"
+        <receiver android:name=".widget.PlayerWidgetReceiver"
             android:exported="true">
 
             <intent-filter>

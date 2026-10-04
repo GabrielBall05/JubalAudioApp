@@ -3,6 +3,7 @@ package com.devball.jubalaudio.data.local
 import android.util.Log
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.devball.jubalaudio.data.local.entity.PlaylistMediaItem
 
 private const val REORDER_PLAYLIST_AFTER_DELETE = """
     CREATE TRIGGER IF NOT EXISTS reorder_playlist_after_delete
