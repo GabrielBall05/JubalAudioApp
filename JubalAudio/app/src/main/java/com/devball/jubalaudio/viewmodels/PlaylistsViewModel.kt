@@ -5,6 +5,8 @@ import com.devball.jubalaudio.data.local.entity.MediaEntity
 import com.devball.jubalaudio.data.local.entity.PlaylistEntity
 import com.devball.jubalaudio.data.repository.PlaylistRepository
 import com.devball.jubalaudio.data.repository.UserPreferencesRepository
+import com.devball.jubalaudio.delegates.PlaylistActionsDelegate
+import com.devball.jubalaudio.delegates.SearchDelegate
 import com.devball.jubalaudio.utilgen.PlaylistsSortOrder
 import com.devball.jubalaudio.viewmodels.events.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,22 +21,22 @@ import javax.inject.Inject
 @HiltViewModel
 class PlaylistsViewModel @Inject constructor(
     private val playlistRepository: PlaylistRepository,
-    private val userPreferencesRepository: UserPreferencesRepository
-) : BaseViewModel() {
+    private val userPreferencesRepository: UserPreferencesRepository,
+    searchDelegate: SearchDelegate,
+    playlistActionsDelegate: PlaylistActionsDelegate
+) : BaseViewModel(),
+    SearchDelegate by searchDelegate,
+    PlaylistActionsDelegate by playlistActionsDelegate {
 
-    //For searching
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery = _searchQuery.asStateFlow()
-
-    //Sort State
+    //Playlist Sort Order
     val sortOrder: StateFlow<PlaylistsSortOrder> = userPreferencesRepository.playlistsSortOrderFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UserPreferencesRepository.INITIAL_PLAYLISTS_SORT_ORDER)
 
-    //Get all playlist entities from the db
+    //Full playlist list
     private val _allPlaylists = playlistRepository.allPlaylistsWithCounts
 
-    //Filter full list by combining with search query
-    val filteredPlaylists = combine(_allPlaylists, _searchQuery, sortOrder) { playlists, query, sort ->
+    //Filtered list by combining with search query
+    val filteredPlaylists = combine(_allPlaylists, searchQuery, sortOrder) { playlists, query, sort ->
         //Filter first
         val filtered = if (query.isBlank()) //Search field empty, show whole list
             playlists
@@ -53,36 +55,15 @@ class PlaylistsViewModel @Inject constructor(
         }
     }.stateIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = emptyList())
 
+
     init {
-
+        //Bind delegates
+        bindPlaylistActions(this)
     }
 
-    fun onSearchQueryChange(newQuery: String) {
-        _searchQuery.value = newQuery
-    }
 
     fun onSortOrderChange(newOrder: PlaylistsSortOrder) = launchWithoutLoading {
         userPreferencesRepository.updatePlaylistsSortOrder(newOrder)
-    }
-
-    fun createPlaylist(playlist: PlaylistEntity) = launchWithoutLoading {
-        playlistRepository.insertPlaylist(playlist) //Perform db insert
-        sendUiEvent(UiEvent.ShowToast("Playlist created"))
-    }
-
-    fun editPlaylist(playlist: PlaylistEntity) = launchWithoutLoading {
-        playlistRepository.updatePlaylist(playlist) //Perform db insert
-        sendUiEvent(UiEvent.ShowToast("Playlist details saved"))
-    }
-
-    fun deletePlaylist(playlist: PlaylistEntity) = launchWithLoading {
-        playlistRepository.deletePlaylist(playlist)
-        sendUiEvent(UiEvent.ShowToast("Playlist deleted"))
-    }
-
-    fun addMediaToPlaylists(mediaIds: List<Int>, playlistIds: List<Int>) = launchWithLoading {
-        playlistRepository.addMediaToPlaylists(mediaIds, playlistIds)
-        sendUiEvent(UiEvent.ShowToast("${mediaIds.size} item${if (mediaIds.size > 1) "s" else ""} added to ${playlistIds.size} playlist${if (playlistIds.size > 1) "s" else ""}"))
     }
 
     suspend fun getMediaNotInPlaylist(playlistId: Int): List<MediaEntity> {

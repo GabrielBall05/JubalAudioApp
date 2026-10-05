@@ -108,7 +108,7 @@ fun ExpandedPlayerScreen(
 
     //Refresh playlists when the picker is opened for the current media item
     LaunchedEffect(showPlaylistPicker, currentMediaEntity) {
-        if (showPlaylistPicker) currentMediaEntity?.let { viewModel.refreshAvailablePlaylists(it.mediaId) }
+        if (showPlaylistPicker) currentMediaEntity?.let { viewModel.refreshAvailablePlaylists(listOf(it.mediaId)) }
     }
 
     val screenOnModifier = if (keepScreenOn) Modifier.keepScreenOn() else Modifier
@@ -423,7 +423,7 @@ fun ExpandedPlayerScreen(
                     showPlaylistForm = true
                 },
                 onConfirm = { selectedIds ->
-                    viewModel.addMediaToPlaylists(media.mediaId, selectedIds)
+                    viewModel.addMediaToPlaylists(listOf(media.mediaId), selectedIds)
                     showPlaylistPicker = false
                 }
             )
@@ -438,7 +438,7 @@ fun ExpandedPlayerScreen(
                 },
                 onConfirm = { newPlaylist ->
                     currentMediaEntity?.let { media ->
-                        viewModel.createPlaylist(newPlaylist, media.mediaId)
+                        viewModel.createPlaylist(newPlaylist, listOf(media.mediaId))
                     }
                     showPlaylistForm = false
                     showPlaylistPicker = true
@@ -455,7 +455,7 @@ fun ExpandedPlayerScreen(
                     confirmText = "Remove",
                     onDismiss = { showRemoveConfirmation = false },
                     onConfirm = {
-                        viewModel.removeFromPlaylist(media.mediaId, playlist.playlistId)
+                        viewModel.removeMediaFromPlaylist(listOf(media.mediaId), playlist.playlistId)
                         showRemoveConfirmation = false
                     }
                 )

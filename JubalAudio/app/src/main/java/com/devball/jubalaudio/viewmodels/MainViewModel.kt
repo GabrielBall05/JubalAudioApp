@@ -7,6 +7,8 @@ import com.devball.jubalaudio.data.local.toMediaItem
 import com.devball.jubalaudio.data.repository.MediaRepository
 import com.devball.jubalaudio.data.repository.PlaylistRepository
 import com.devball.jubalaudio.data.repository.SettingsRepository
+import com.devball.jubalaudio.delegates.MediaActionsDelegate
+import com.devball.jubalaudio.delegates.PlaylistActionsDelegate
 import com.devball.jubalaudio.player.MediaControllerManager
 import com.devball.jubalaudio.viewmodels.events.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,8 +33,13 @@ class MainViewModel @Inject constructor(
     private val controllerManager: MediaControllerManager,
     private val mediaRepository: MediaRepository,
     private val playlistRepository: PlaylistRepository,
+    mediaActionsDelegate: MediaActionsDelegate,
+    playlistActionsDelegate: PlaylistActionsDelegate,
     settingsRepository: SettingsRepository
-): BaseViewModel() {
+): BaseViewModel(),
+    MediaActionsDelegate by mediaActionsDelegate,
+    PlaylistActionsDelegate by playlistActionsDelegate {
+
     private var playbackJob: Job? = null
 
     //Expose states from the manager
@@ -68,11 +75,6 @@ class MainViewModel @Inject constructor(
     }.flatMapLatest { it }
      .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-
-    //Available playlists for playlist picker
-    private val _availablePlaylists = MutableStateFlow<List<PlaylistEntity>>(emptyList())
-    val availablePlaylists = _availablePlaylists.asStateFlow()
-
     //Expose states from settings
     val keepScreenOn: StateFlow<Boolean> = settingsRepository.keepScreenOnFlow.stateIn(
         scope = viewModelScope,
@@ -86,6 +88,10 @@ class MainViewModel @Inject constructor(
     )
 
     init {
+        //Bind delegates
+        bindMediaActions(this)
+        bindPlaylistActions(this)
+
         //Ensure the controller is connected when the app starts or reopens
         controllerManager.setupController()
 
@@ -111,7 +117,7 @@ class MainViewModel @Inject constructor(
         //Watch for player error messages for UI events
         viewModelScope.launch {
             controllerManager.errorMessage.collect { message ->
-                sendUiEvent(UiEvent.ShowToast(message))
+                showToast(message)
             }
         }
     }
@@ -148,7 +154,7 @@ class MainViewModel @Inject constructor(
                 .map { it.toMediaItem() }
             withContext(Dispatchers.Main) { //MediaController must use Main thread
                 controllerManager.addToQueue(mediaItems)
-                sendUiEvent(UiEvent.ShowToast("Added playlist to queue"))
+                showToast("Added playlist to queue")
             }
         }
     }
@@ -157,7 +163,7 @@ class MainViewModel @Inject constructor(
         controllerManager.addToQueue(mediaList
             .filter { !it.isStaleUri }
             .map { it.toMediaItem() })
-        sendUiEvent(UiEvent.ShowToast("Added ${mediaList.size} item${if (mediaList.size > 1) "s" else ""} to queue"))
+        showToast("Added ${mediaList.size} item${if (mediaList.size > 1) "s" else ""} to queue")
     }
 
     fun playMediaNow(media: MediaEntity) {
@@ -165,36 +171,12 @@ class MainViewModel @Inject constructor(
     }
 
     fun clearQueue() = controllerManager.clearQueue()
-
     fun moveManualQueueItem(fromIndex: Int, toIndex: Int) = controllerManager.moveManualQueueItem(fromIndex, toIndex)
     fun moveUpNextItem(fromIndex: Int, toIndex: Int) = controllerManager.moveUpNextItem(fromIndex, toIndex)
 
     fun manualQueueSkipToIndex(index: Int) = controllerManager.manualQueueSkipToIndex(index)
     fun upNextSkipToIndex(index: Int) = controllerManager.upNextSkipToIndex(index)
     fun removeItemAtIndex(index: Int, isManual: Boolean) = controllerManager.removeItemAtIndex(index, isManual)
-
-    //Database actions
-    fun removeFromPlaylist(mediaId: Int, playlistId: Int) = launchWithoutLoading {
-        playlistRepository.removeMediaFromPlaylist(listOf(mediaId), playlistId)
-        sendUiEvent(UiEvent.ShowToast("Removed from playlist"))
-    }
-
-    fun createPlaylist(playlist: PlaylistEntity, mediaIdContext: Int) = viewModelScope.launch {
-        playlistRepository.insertPlaylist(playlist)
-        refreshAvailablePlaylists(mediaIdContext)
-        sendUiEvent(UiEvent.ShowToast("Playlist created"))
-    }
-
-    fun addMediaToPlaylists(mediaId: Int, playlistIds: List<Int>) = viewModelScope.launch {
-        playlistRepository.addMediaToPlaylists(listOf(mediaId), playlistIds)
-        sendUiEvent(UiEvent.ShowToast("Added to ${playlistIds.size} playlist${if (playlistIds.size > 1) "s" else ""}"))
-    }
-
-    fun refreshAvailablePlaylists(mediaId: Int) {
-        viewModelScope.launch {
-            _availablePlaylists.value = playlistRepository.getPlaylistsNotHavingMediaList(listOf(mediaId))
-        }
-    }
 
     //Ticker
     private fun startPlaybackTicker() {

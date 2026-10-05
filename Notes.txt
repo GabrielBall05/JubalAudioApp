@@ -1,7 +1,7 @@
 TODO:
 
 
-improve viewmodels/ui
+improve ui calls (centralize common dialog/menu logic)
 implement mediastore + file/uri resolution
 implement direct metadata editing
 
@@ -24,5 +24,4 @@ widget
 
 ***KEEP CURRENT VERSION IN OPEN TESTING UNTIL THE MAJOR CHANGE IS FINISHED - THEN RELEASE TO PUBLIC***
 ***Or just have it in production and attempt a migration***
-
 

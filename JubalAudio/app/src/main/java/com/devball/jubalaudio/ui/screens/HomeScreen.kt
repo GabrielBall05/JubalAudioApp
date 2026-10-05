@@ -70,6 +70,8 @@ import com.devball.jubalaudio.utilgen.MediaSortOrder
 import com.devball.jubalaudio.viewmodels.events.ObserveUiEvents
 import com.devball.jubalaudio.ui.utilui.PullToRefresh
 import com.devball.jubalaudio.ui.modifiers.indicatorBorder
+import com.devball.jubalaudio.utilgen.getCommonArtworkForIds
+import com.devball.jubalaudio.utilgen.getCommonCreatorForIds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +89,6 @@ fun HomeScreen(
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val selectedIds by viewModel.selectedMediaIds.collectAsStateWithLifecycle()
     val isAnySelected by viewModel.isAnySelected.collectAsStateWithLifecycle()
-    val isAllSelected by viewModel.isAllSelected.collectAsStateWithLifecycle()
     val availablePlaylists by viewModel.availablePlaylists.collectAsStateWithLifecycle()
     val sortOrder by viewModel.sortOrder.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
@@ -107,6 +108,7 @@ fun HomeScreen(
     var creatingPlaylist by rememberSaveable { mutableStateOf(false) }
     var mediaIdToRelink by rememberSaveable { mutableStateOf<Int?>(null) }
     var showOnlyStale by rememberSaveable { mutableStateOf(false) }
+
 
     //Bulk File Picker launcher
     val filePickerLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenMultipleDocuments()) { uris: List<Uri> ->
@@ -186,7 +188,7 @@ fun HomeScreen(
             //Bulk Actions
             BulkActionsBar(
                 isAnySelected = isAnySelected,
-                isAllSelected = isAllSelected,
+                isAllSelected = mediaList.isNotEmpty() && mediaList.size == selectedIds.size,
                 onToggleAllClick = { viewModel.toggleSelectAll() },
                 onClearSelectionClick = { viewModel.clearSelection() }
             ) {
@@ -330,8 +332,8 @@ fun HomeScreen(
         } else {
             EditMediaBulkDialog(
                 itemCount = idsToEdit.size,
-                commonCreator = viewModel.getCommonCreator(idsToEdit),
-                commonArtwork = viewModel.getCommonArtwork(idsToEdit),
+                commonCreator = mediaList.getCommonCreatorForIds(idsToEdit),
+                commonArtwork = mediaList.getCommonArtworkForIds(idsToEdit),
                 onDismiss = { idsToEdit = emptyList() },
                 onConfirmCreator = { viewModel.updateCreatorBulk(it, idsToEdit) },
                 onConfirmArtwork = { viewModel.updateArtworkBulk(it, idsToEdit) }

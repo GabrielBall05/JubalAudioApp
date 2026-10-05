@@ -8,6 +8,10 @@ import com.devball.jubalaudio.data.local.entity.PlaylistEntity
 import com.devball.jubalaudio.data.repository.MediaRepository
 import com.devball.jubalaudio.data.repository.PlaylistRepository
 import com.devball.jubalaudio.data.repository.UserPreferencesRepository
+import com.devball.jubalaudio.delegates.MediaActionsDelegate
+import com.devball.jubalaudio.delegates.PlaylistActionsDelegate
+import com.devball.jubalaudio.delegates.SearchDelegate
+import com.devball.jubalaudio.delegates.SelectionDelegate
 import com.devball.jubalaudio.utilgen.MediaSortOrder
 import com.devball.jubalaudio.viewmodels.events.UiEvent
 import com.devball.jubalaudio.utilgen.getCommonArtwork
@@ -27,22 +31,26 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val mediaRepository: MediaRepository,
-    private val playlistRepository: PlaylistRepository,
-    private val userPreferencesRepository: UserPreferencesRepository
-): BaseViewModel() {
-    //For searching
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery = _searchQuery.asStateFlow()
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val searchDelegate: SearchDelegate,
+    private val selectionDelegate: SelectionDelegate,
+    private val mediaActionsDelegate: MediaActionsDelegate,
+    private val playlistActionsDelegate: PlaylistActionsDelegate
+): BaseViewModel(),
+    SearchDelegate by searchDelegate,
+    SelectionDelegate by selectionDelegate,
+    MediaActionsDelegate by mediaActionsDelegate,
+    PlaylistActionsDelegate by playlistActionsDelegate {
 
-    //Sort State
+    //Media Sort Order
     val sortOrder: StateFlow<MediaSortOrder> = userPreferencesRepository.mediaSortOrderFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UserPreferencesRepository.INITIAL_MEDIA_SORT_ORDER)
 
-    //Get all media entities from DB using the interactor's shared flow
+    //Full Media List
     private val _allMedia = mediaRepository.allMedia
 
-    //Filter full list by combining with the search query (this is the list shown in UI)
-    val filteredMedia = combine(_allMedia, _searchQuery, sortOrder) { media, query, sort ->
+    //Filtered list by combining with the search query - list used for UI
+    val filteredMedia = combine(_allMedia, searchQuery, sortOrder) { media, query, sort ->
         //Filter first
         val filtered = if (query.isBlank()) { //Search field empty, show whole list
             media
@@ -63,144 +71,70 @@ class HomeViewModel @Inject constructor(
             MediaSortOrder.DATE_ADDED_MOST_RECENT -> filtered.sortedByDescending { it.dateAdded }
             MediaSortOrder.DATE_ADDED_LEAST_RECENT -> filtered.sortedBy { it.dateAdded }
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    //Full list filtered by staleUri
     val allStaleMedia = _allMedia.map { list ->
         list.filter { it.isStaleUri }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
-    //Selection variables
-    private val _selectedMediaIds = MutableStateFlow<List<Int>>(emptyList())
-    val selectedMediaIds = _selectedMediaIds.asStateFlow()
-    val isAnySelected = selectedMediaIds.map { it.isNotEmpty() }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-    val isAllSelected = filteredMedia.combine(selectedMediaIds) { all, selected ->
-        all.isNotEmpty() && all.size == selected.size
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
-    //Available playlists for PlaylistPicker
-    private val _availablePlaylists = MutableStateFlow<List<PlaylistEntity>>(emptyList())
-    val availablePlaylists = _availablePlaylists.asStateFlow()
-
+    //Simple flag for whether the user has media or not
     val hasMedia: StateFlow<Boolean> = _allMedia
         .map { list -> list.isNotEmpty() }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = false
-        )
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
 
     init {
+        //Bind delegates to the ViewModel's lifecycle and UI handler
+        bindSelectionScope(viewModelScope)
+        bindMediaActions(this)
+        bindPlaylistActions(this)
+
         //Validate URI integrity and notify user if applicable
         viewModelScope.launch {
             scanUris()
         }
     }
 
-    fun refreshAvailablePlaylists(mediaIds: List<Int>) = launchWithoutLoading {
-        _availablePlaylists.value = playlistRepository.getPlaylistsNotHavingMediaList(mediaIds)
-    }
-
-    fun onSearchQueryChange(newQuery: String) {
-        _searchQuery.value = newQuery
-        _selectedMediaIds.value = emptyList() //Clear selections
-    }
 
     fun onSortOrderChange(newOrder: MediaSortOrder) = launchWithoutLoading {
         userPreferencesRepository.updateMediaSortOrder(newOrder)
     }
 
-    fun toggleSelection(mediaId: Int) {
-        _selectedMediaIds.update { currentList ->
-            if (currentList.contains(mediaId)) currentList - mediaId  //Remove from selection list
-            else currentList + mediaId  //Add to selection list
-        }
+    //Override SearchDelegate's onSearchQueryChange because changing search query should also clear selection
+    override fun onSearchQueryChange(newQuery: String) {
+        searchDelegate.onSearchQueryChange(newQuery)
+        selectionDelegate.clearSelection()
+    }
+
+    //Override MediaActionsDelegate's deleteMediaByIds because deleting should also remove them from selection
+    override fun deleteMediaByIds(ids: List<Int>) {
+        mediaActionsDelegate.deleteMediaByIds(ids)
+        selectionDelegate.removeSelections(ids)
     }
 
     fun toggleSelectAll() {
-        _selectedMediaIds.value =
-            if (_selectedMediaIds.value.size == filteredMedia.value.size) emptyList() //Deselect all
-            else filteredMedia.value //Select all
-                .filter { !it.isStaleUri }
-                .map { it.mediaId }
-                .toList()
-    }
-
-    fun clearSelection() {
-        _selectedMediaIds.value = emptyList()
-    }
-
-    fun getCommonCreator(ids: List<Int>): String {
-        return filteredMedia.value.filter { it.mediaId in ids }.getCommonCreator()
-    }
-
-    fun getCommonArtwork(ids: List<Int>): String? {
-        return filteredMedia.value.filter { it.mediaId in ids }.getCommonArtwork()
+        toggleSelectAll(filteredMedia.value
+            .filter { !it.isStaleUri }
+            .map { it.mediaId }
+        )
     }
 
     fun importMedia(uriList: List<Uri>) = launchWithLoading {
         try {
             val newIds = mediaRepository.importMedia(uriList)
-            sendUiEvent(UiEvent.ShowToast("Added ${newIds.size} item${if (newIds.size > 1) "s" else ""} to library" ))
-            _selectedMediaIds.value += newIds
+            showToast("Added ${newIds.size} item${if (newIds.size > 1) "s" else ""} to library" )
+            selectionDelegate.addSelections(newIds)
         } catch (e: Exception) {
-            sendUiEvent(UiEvent.ShowToast("Failed to import media"))
+            showToast("Failed to import media")
         }
-    }
-
-    fun relinkMedia(mediaId: Int, newUri: Uri) = launchWithoutLoading {
-        try {
-            mediaRepository.relinkMedia(mediaId, newUri)
-            sendUiEvent(UiEvent.ShowToast("File re-linked successfully."))
-        } catch (e: Exception) {
-            sendUiEvent(UiEvent.ShowToast("Failed to link new file."))
-        }
-    }
-
-    fun deleteMediaByIds(ids: List<Int>) = launchWithLoading {
-        mediaRepository.deleteMediaList(ids) //Perform db deletions
-        _selectedMediaIds.value -= ids.toSet() //Remove from selection list since they no longer exist
-        sendUiEvent(UiEvent.ShowToast("Removed ${ids.size} item${if (ids.size > 1) "s" else ""} from library"))
-    }
-
-    fun updateMediaItem(item: MediaEntity) = launchWithoutLoading {
-        mediaRepository.updateMedia(item) //Perform db update
-        sendUiEvent(UiEvent.ShowToast("Changes saved"))
-    }
-
-    fun updateCreatorBulk(creator: String, ids: List<Int>) = launchWithLoading {
-        mediaRepository.updateCreatorBulk(creator, ids) //Perform db update
-        sendUiEvent(UiEvent.ShowToast("${ids.size} item${if (ids.size > 1) "s" else ""} updated"))
-    }
-
-    fun updateArtworkBulk(artworkUri: String?, ids: List<Int>) = launchWithLoading {
-        mediaRepository.updateArtworkBulk(artworkUri, ids) //Perform db update
-        sendUiEvent(UiEvent.ShowToast("${ids.size} item${if (ids.size > 1) "s" else ""} updated"))
-    }
-
-    fun addMediaToPlaylists(mediaIds: List<Int>, playlistIds: List<Int>) = launchWithLoading {
-        playlistRepository.addMediaToPlaylists(mediaIds, playlistIds) //Perform db insert
-        sendUiEvent(UiEvent.ShowToast("${mediaIds.size} item${if (mediaIds.size > 1) "s" else ""} added to ${playlistIds.size} playlist${if (playlistIds.size > 1) "s" else ""}"))
-    }
-
-    fun createPlaylist(playlist: PlaylistEntity, mediaIdsContext: List<Int> = emptyList()) = launchWithoutLoading {
-        playlistRepository.insertPlaylist(playlist) //Perform db insert
-        if (mediaIdsContext.isNotEmpty()) refreshAvailablePlaylists(mediaIdsContext)
-        sendUiEvent(UiEvent.ShowToast("Playlist created"))
     }
 
     suspend fun scanUris() {
         val numStale = mediaRepository.validateMediaUris()
-        if (numStale > 0) sendUiEvent(
-            event = UiEvent.ShowToast(
-                message = "$numStale media have invalid file paths. View in Home screen via filter option.",
-                length = Toast.LENGTH_LONG
-            )
+        if (numStale > 0) showToast(
+            message = "$numStale media have invalid file paths. View in Home screen via filter option.",
+            length = Toast.LENGTH_LONG
         )
     }
 }

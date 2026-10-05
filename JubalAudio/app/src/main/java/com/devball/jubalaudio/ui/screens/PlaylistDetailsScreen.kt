@@ -85,6 +85,8 @@ import com.devball.jubalaudio.ui.components.menus.PlaylistSheetAction
 import com.devball.jubalaudio.viewmodels.PlaylistDetailsViewModel
 import com.devball.jubalaudio.viewmodels.events.ObserveUiEvents
 import com.devball.jubalaudio.ui.utilui.SwipeDismissable
+import com.devball.jubalaudio.utilgen.getCommonArtworkForIds
+import com.devball.jubalaudio.utilgen.getCommonCreatorForIds
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
@@ -114,7 +116,6 @@ fun PlaylistDetailsScreen(
     val availablePlaylists by viewModel.availablePlaylists.collectAsStateWithLifecycle()
     val selectedIds by viewModel.selectedMediaIds.collectAsStateWithLifecycle()
     val isAnySelected by viewModel.isAnySelected.collectAsStateWithLifecycle()
-    val isAllSelected by viewModel.isAllSelected.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
 
     //Show loading dialog if playlist hasn't been fetched yet
@@ -301,7 +302,7 @@ fun PlaylistDetailsScreen(
                         BulkActionsBar(
                             modifier = Modifier.fillMaxSize(),
                             isAnySelected = isAnySelected,
-                            isAllSelected = isAllSelected,
+                            isAllSelected = mediaList.isNotEmpty() && mediaList.size == selectedIds.size,
                             onToggleAllClick = { viewModel.toggleSelectAll() },
                             onClearSelectionClick = { viewModel.clearSelection() }
                         ) {
@@ -512,7 +513,7 @@ fun PlaylistDetailsScreen(
             confirmText = "Remove",
             onDismiss = { idsToRemove = emptyList() },
             onConfirm = {
-                viewModel.removeMediaFromPlaylist(idsToRemove)
+                viewModel.removeMediaFromPlaylist(idsToRemove, playlist.playlistId)
                 idsToRemove = emptyList()
                 viewModel.clearSelection()
             }
@@ -570,8 +571,8 @@ fun PlaylistDetailsScreen(
         } else {
             EditMediaBulkDialog(
                 itemCount = idsToEdit.size,
-                commonCreator = viewModel.getCommonCreator(idsToEdit),
-                commonArtwork = viewModel.getCommonArtwork(idsToEdit),
+                commonCreator = mediaList.getCommonCreatorForIds(idsToEdit),
+                commonArtwork = mediaList.getCommonArtworkForIds(idsToEdit),
                 onDismiss = { idsToEdit = emptyList() },
                 onConfirmCreator = { viewModel.updateCreatorBulk(it, idsToEdit) },
                 onConfirmArtwork = { viewModel.updateArtworkBulk(it, idsToEdit) }
